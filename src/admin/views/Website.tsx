@@ -10,7 +10,7 @@ import type { SectionKey, SiteContent, ThemeIcon } from "../../data/types";
 import { THEME_ICONS } from "../../site/components/Icons";
 import { Badge, Button, Card, Field, IconButton, Input, PageHeader, Select, Textarea, Toggle, useFeedback } from "../ui";
 
-type TabKey = "layout" | "hero" | "book" | "explores" | "author" | "chapters" | "manifesto" | "impact" | "reviews" | "buy" | "excerpt" | "footer" | "seo";
+type TabKey = "layout" | "hero" | "book" | "explores" | "author" | "chapters" | "manifesto" | "impact" | "reviews" | "buy" | "faq" | "excerpt" | "footer" | "seo";
 
 const TABS: { key: TabKey; label: string; section?: SectionKey }[] = [
   { key: "layout", label: "Sections & brand" },
@@ -23,6 +23,7 @@ const TABS: { key: TabKey; label: string; section?: SectionKey }[] = [
   { key: "impact", label: "Why it matters", section: "impact" },
   { key: "reviews", label: "Reviews", section: "reviews" },
   { key: "buy", label: "Buy links", section: "buy" },
+  { key: "faq", label: "FAQ", section: "faq" },
   { key: "excerpt", label: "Excerpt" },
   { key: "footer", label: "Footer & social" },
   { key: "seo", label: "Search & sharing" },
@@ -39,6 +40,7 @@ const SECTION_LABELS: Record<SectionKey, string> = {
   impact: "Why this book matters",
   reviews: "Reader reviews",
   buy: "Begin the journey (buy)",
+  faq: "Questions (FAQ)",
 };
 
 export default function Website() {
@@ -386,6 +388,29 @@ export default function Website() {
                               <Star className={`h-3.5 w-3.5 ${r.primary ? "fill-current" : ""}`} /> {r.primary ? "Main buy link" : "Make main link"}
                             </Button>
                           </div>
+                        </div>
+                      )}
+                    />
+                  </Group>
+                </>
+              )}
+
+              {tab === "faq" && (
+                <>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Text label="Small heading" value={draft.faq.eyebrow} onChange={(v) => patch("faq", { eyebrow: v })} />
+                    <Text label="Heading" value={draft.faq.heading} onChange={(v) => patch("faq", { heading: v })} />
+                  </div>
+                  <Group title="Questions">
+                    <ItemList
+                      items={draft.faq.items}
+                      onChange={(items) => patch("faq", { items })}
+                      create={() => ({ id: uid("f"), q: "", a: "" })}
+                      addLabel="Add question"
+                      render={(f, set) => (
+                        <div className="space-y-3">
+                          <Text label="Question" value={f.q} onChange={(v) => set({ q: v })} />
+                          <Text label="Answer" multiline value={f.a} onChange={(v) => set({ a: v })} />
                         </div>
                       )}
                     />

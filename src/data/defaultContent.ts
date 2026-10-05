@@ -162,6 +162,37 @@ export const DEFAULT_CONTENT: SiteContent = {
     title: "",
     body: "",
   },
+  faq: {
+    eyebrow: "Questions",
+    heading: "Before You Begin",
+    items: [
+      {
+        id: "f1",
+        q: "What is Postmortem Life Continuation about?",
+        a: "It brings together real-life experiences, medical insight and personal reflection — documented events, dreams and unexplained phenomena — as compelling evidence that life continues beyond physical death.",
+      },
+      {
+        id: "f2",
+        q: "Who wrote it?",
+        a: "Dr. Wilson Antoine, a medical doctor with over three decades of clinical experience. The book grew out of years of reflection, investigation and lived experience.",
+      },
+      {
+        id: "f3",
+        q: "Who is this book for?",
+        a: "Anyone who fears death, anyone searching for purpose, and anyone who has lost someone they love — and every reader curious about where medicine, faith and experience meet.",
+      },
+      {
+        id: "f4",
+        q: "Where can I buy it?",
+        a: "It's available now as a Kindle eBook on Amazon. Every “Buy” button on this page takes you straight there.",
+      },
+      {
+        id: "f5",
+        q: "Can I read a little first?",
+        a: "Yes — open the featured chapters above for a summary of each, or use “Read sample” on the book's Amazon page.",
+      },
+    ],
+  },
   footer: {
     tagline: "Compelling evidence that life does not end at death.",
     newsletterHeading: "Stay in the light",
@@ -181,5 +212,6 @@ export const DEFAULT_CONTENT: SiteContent = {
     impact: true,
     reviews: true,
     buy: true,
+    faq: true,
   },
 };

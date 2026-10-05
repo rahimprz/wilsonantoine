@@ -3,6 +3,7 @@ import { ArrowUpRight, Check } from "lucide-react";
 import { gsap, MOTION_OK, useGSAP } from "../../lib/gsap";
 import type { Retailer, SiteContent } from "../../data/types";
 import Book3D from "../components/Book3D";
+import Ornament from "../components/Ornament";
 import SmartImage from "../components/SmartImage";
 import { onBuyClick } from "../buy";
 import { useReveal } from "../useReveal";
@@ -18,7 +19,18 @@ function withTitle(text: string, title: string) {
 }
 
 /** What the book is: the editions photo, the description, and what makes it different. */
-export default function AboutBook({ book, booksImage, title, retailer }: { book: SiteContent["book"]; booksImage: string; title: string; retailer?: Retailer }) {
+interface AboutBookProps {
+  book: SiteContent["book"];
+  booksImage: string;
+  title: string;
+  subtitle: string;
+  author: string;
+  formats: string[];
+  chapterCount: number;
+  retailer?: Retailer;
+}
+
+export default function AboutBook({ book, booksImage, title, subtitle, author, formats, chapterCount, retailer }: AboutBookProps) {
   const root = useRef<HTMLElement>(null);
   useReveal(root);
   useGSAP(
@@ -36,6 +48,7 @@ export default function AboutBook({ book, booksImage, title, retailer }: { book:
     <section id="about-book" ref={root} className="relative py-24 md:py-32">
       <div className="wrap">
         <div className="mx-auto max-w-3xl text-center">
+          <Ornament className="mb-5" />
           <p data-reveal className="kicker">{book.eyebrow}</p>
           <h2 data-reveal className="title mt-4 text-[clamp(2.4rem,4.8vw,4rem)] text-navy">
             {book.heading}
@@ -76,6 +89,20 @@ export default function AboutBook({ book, booksImage, title, retailer }: { book:
                 </li>
               ))}
             </ul>
+            <dl data-reveal className="mt-6 overflow-hidden rounded-2xl border border-navy/10 bg-white/60 text-sm">
+              {[
+                ["Title", title],
+                ["Subtitle", subtitle],
+                ["Author", author],
+                ["Format", formats.join(" · ") || "—"],
+                ["Inside", `${chapterCount} featured chapters`],
+              ].map(([k, v]) => (
+                <div key={k} className="grid grid-cols-[6.5rem_1fr] gap-3 border-b border-navy/10 px-5 py-3 last:border-b-0">
+                  <dt className="font-semibold tracking-wide text-gold-deep uppercase">{k}</dt>
+                  <dd className="text-navy">{v}</dd>
+                </div>
+              ))}
+            </dl>
             {retailer && (
               <a data-reveal href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-buy mt-8">
                 Get the book <ArrowUpRight className="h-4 w-4" />

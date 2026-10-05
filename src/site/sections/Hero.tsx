@@ -3,6 +3,7 @@ import { ArrowUpRight, BookOpen, Star } from "lucide-react";
 import { gsap, MOTION_OK, useGSAP } from "../../lib/gsap";
 import type { Retailer, SiteContent } from "../../data/types";
 import BgVideo from "../components/BgVideo";
+import HeroDust from "../components/HeroDust";
 import Book3D from "../components/Book3D";
 import SmartImage from "../components/SmartImage";
 import { onBuyClick } from "../buy";
@@ -57,10 +58,11 @@ export default function Hero({ content, retailer, onExcerpt, showAnnouncement }:
         <SmartImage src={hero.backgroundImage} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-50" fetchPriority="high" />
         <BgVideo src={hero.backgroundVideo} className="absolute inset-0 h-full w-full opacity-80 mix-blend-screen" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,22,56,0.95)_0%,rgba(11,22,56,0.75)_45%,rgba(11,22,56,0.2)_100%)] max-lg:bg-[linear-gradient(180deg,rgba(11,22,56,0.55),rgba(11,22,56,0.9))]" />
+        <HeroDust className="absolute inset-0 h-full w-full" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-navy" />
       </div>
 
-      <div className="wrap grid min-h-[100svh] items-center gap-12 pt-28 pb-16 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8 lg:pt-24">
+      <div className="wrap grid min-h-[100svh] items-center gap-12 pt-28 pb-24 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8 lg:pt-24">
         <div className="max-lg:order-2 max-lg:text-center">
           {showAnnouncement && announcement.text && (
             <p data-in className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-[0.8rem] font-medium text-gold-light">

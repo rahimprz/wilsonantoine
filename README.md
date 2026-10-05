@@ -34,7 +34,13 @@ cover, warm paper-white reading sections, Instrument Serif headings and Inter Ti
 | **Premise** | One line over the rising-light video. |
 | **Reviews** | Reader review cards with stars. |
 | **Get your copy** | The 3D book and one card per edition/store (add Paperback, Hardcover, Audiobook… in the dashboard and they appear here). |
+| **FAQ** | Common reader questions (editable in Dashboard → Website → FAQ). |
 | **Footer** | Newsletter sign-up, links, socials. |
+
+Details throughout: drifting gold light and stars in the hero, an at-a-glance strip (format, a doctor
+author, years of experience, chapters), a book-details card, a ribbon of the book's themes, gold
+ornaments over headings, a light sweep on every buy button, “Share the book” (WhatsApp, Facebook, X,
+email, copy link) and a back-to-top button whose ring fills as you read.
 
 Motion is calm and purposeful (GSAP + ScrollTrigger, Lenis smooth scroll): gentle fade-ups, the book
 rotating in, subtle parallax. Phones get a sticky “Buy” bar. Everything respects `prefers-reduced-motion`.

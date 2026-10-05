@@ -4,6 +4,7 @@ import { gsap, MOTION_OK, useGSAP } from "../../lib/gsap";
 import type { SiteContent } from "../../data/types";
 import BgVideo from "../components/BgVideo";
 import Book3D from "../components/Book3D";
+import ShareBook from "../components/ShareBook";
 import { onBuyClick } from "../buy";
 import { useReveal } from "../useReveal";
 
@@ -76,6 +77,9 @@ export default function GetCopy({ buy, title, author, cover }: { buy: SiteConten
                 </a>
               );
             })}
+          </div>
+          <div data-reveal className="mt-10 border-t border-white/10 pt-6">
+            <ShareBook title={title} author={author} />
           </div>
         </div>
       </div>

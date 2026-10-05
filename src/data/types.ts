@@ -37,6 +37,12 @@ export interface Highlight {
   label: string;
 }
 
+export interface FaqItem {
+  id: string;
+  q: string;
+  a: string;
+}
+
 export interface Pillar {
   id: string;
   title: string;
@@ -53,7 +59,8 @@ export type SectionKey =
   | "manifesto"
   | "impact"
   | "reviews"
-  | "buy";
+  | "buy"
+  | "faq";
 
 export interface SiteContent {
   seo: { title: string; description: string };
@@ -79,6 +86,7 @@ export interface SiteContent {
   reviews: { eyebrow: string; heading: string; items: Review[] };
   buy: { eyebrow: string; heading: string; body: string; video: string; retailers: Retailer[] };
   excerpt: { title: string; body: string };
+  faq: { eyebrow: string; heading: string; items: FaqItem[] };
   footer: {
     tagline: string;
     newsletterHeading: string;

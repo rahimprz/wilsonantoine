@@ -266,3 +266,22 @@ html.lenis body {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
 }
+
+/* a light sweep across the buy buttons on hover */
+.btn-buy {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-buy::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.55) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.9s var(--ease-out-expo);
+}
+.btn-buy:hover::after {
+  transform: translateX(120%);
+}

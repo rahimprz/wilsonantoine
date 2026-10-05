@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { Quote, Star } from "lucide-react";
 import type { SiteContent } from "../../data/types";
+import Ornament from "../components/Ornament";
 import { useReveal } from "../useReveal";
 
 export default function Reviews({ reviews }: { reviews: SiteContent["reviews"] }) {
@@ -12,6 +13,7 @@ export default function Reviews({ reviews }: { reviews: SiteContent["reviews"] }
     <section id="reviews" ref={root} className="relative py-24 md:py-32">
       <div className="wrap">
         <div className="mx-auto max-w-2xl text-center">
+          <Ornament className="mb-5" />
           <p data-reveal className="kicker">{reviews.eyebrow}</p>
           <h2 data-reveal className="title mt-4 text-[clamp(2.4rem,4.8vw,4rem)] text-navy">
             {reviews.heading}

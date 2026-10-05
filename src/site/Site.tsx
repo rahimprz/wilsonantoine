@@ -6,10 +6,14 @@ import { useStore } from "../lib/store";
 import { contentStore } from "../data/stores";
 import ExcerptModal from "./components/ExcerptModal";
 import Header, { type NavItem } from "./components/Header";
+import BackToTop from "./components/BackToTop";
 import MobileBuyBar from "./components/MobileBuyBar";
+import ThemeTicker from "./components/ThemeTicker";
 import AboutBook from "./sections/AboutBook";
 import Author from "./sections/Author";
 import Discover from "./sections/Discover";
+import Faq from "./sections/Faq";
+import Highlights from "./sections/Highlights";
 import Footer from "./sections/Footer";
 import ForWhom from "./sections/ForWhom";
 import GetCopy from "./sections/GetCopy";
@@ -88,10 +92,11 @@ export default function Site() {
       show.chapters && { id: "chapters", label: "Inside" },
       show.author && { id: "author", label: "The Author" },
       show.reviews && content.reviews.items.length > 0 && { id: "reviews", label: "Reviews" },
+      show.faq && content.faq.items.length > 0 && { id: "faq", label: "FAQ" },
       show.buy && { id: "buy", label: "Get the Book" },
     ];
     return items.filter(Boolean) as NavItem[];
-  }, [show.book, show.author, show.chapters, show.reviews, show.buy, content.reviews.items.length]);
+  }, [show.book, show.author, show.chapters, show.reviews, show.buy, show.faq, content.reviews.items.length, content.faq.items.length]);
 
   const openExcerpt = useCallback(() => {
     if (hasExcerpt) {
@@ -114,19 +119,34 @@ export default function Site() {
 
       <main id="main">
         <Hero content={content} retailer={retailer} onExcerpt={openExcerpt} showAnnouncement={show.announcement} />
-        {show.book && <AboutBook book={content.book} booksImage={content.book.image} title={content.hero.title} retailer={retailer} />}
+        <Highlights content={content} retailer={retailer} />
+        {show.book && (
+          <AboutBook
+            book={content.book}
+            booksImage={content.book.image}
+            title={content.hero.title}
+            subtitle={content.hero.subtitle}
+            author={authorName}
+            formats={[...new Set(content.buy.retailers.filter((r) => r.url).map((r) => r.format))]}
+            chapterCount={content.chapters.items.length}
+            retailer={retailer}
+          />
+        )}
         {show.explores && <Discover explores={content.explores} />}
+        {show.marquee && <ThemeTicker items={content.marquee.items} />}
         {show.chapters && <Inside chapters={content.chapters} cover={cover} retailer={retailer} hasExcerpt={hasExcerpt} onExcerpt={openExcerpt} />}
         {show.author && <Author author={content.author} />}
         {show.impact && <ForWhom impact={content.impact} />}
         {show.manifesto && content.manifesto.quote && <Premise manifesto={content.manifesto} />}
         {show.reviews && <Reviews reviews={content.reviews} />}
+        {show.faq && <Faq faq={content.faq} />}
         {show.buy && <GetCopy buy={content.buy} title={content.hero.title} author={authorName} cover={cover} />}
       </main>
 
       <div className="pt-24 md:pt-32" />
       <Footer footer={content.footer} nav={nav} logo={content.brand.logo} brand={content.brand.name} />
       <MobileBuyBar retailer={retailer} title={content.hero.title} />
+      <BackToTop />
       <ExcerptModal open={excerptOpen} onClose={closeExcerpt} title={content.excerpt.title} body={content.excerpt.body} retailer={retailer} />
     </div>
   );
