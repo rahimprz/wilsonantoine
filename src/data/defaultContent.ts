@@ -13,7 +13,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     description:
       "Compelling evidence that life does not end at death. A medical doctor with over three decades of clinical experience explores dreams, signs, and real events that point to life beyond the grave.",
   },
-  brand: { name: "Wilson Antoine MD", logo: "media:WILson-logo.png" },
+  brand: { name: "Wilson Antoine MD", logo: "/books/logo.webp" },
   announcement: {
     text: "Postmortem Life Continuation is available now on Kindle",
     linkLabel: "Get your copy",
@@ -25,7 +25,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     subtitle: "Compelling Evidence That Life Does Not End at Death",
     primaryCta: "Read an Excerpt",
     secondaryCta: "Buy the Book",
-    booksImage: "media:wetgfwertwe.png",
+    booksImage: "/books/books-hardcover.webp",
     backgroundImage: "media:view-universe-space-shot-milky-way-galaxy-scaled.webp",
     backgroundVideo: "/videos/nebula-drift.mp4",
   },
@@ -38,10 +38,10 @@ export const DEFAULT_CONTENT: SiteContent = {
       "Explores the concept of multiphasic life",
       "Blends science, spirituality, and philosophy",
     ],
-    image: "media:wfwed.png",
+    image: "/books/books-fan.webp",
     ctaLabel: "Know About Author",
     // a flat image of the front cover (optional) — when set, the 3D book wears it
-    cover: "",
+    cover: "/books/cover.webp",
   },
   marquee: {
     items: [
@@ -57,7 +57,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     eyebrow: "What You'll Discover",
     heading: "What This Book Explores",
     intro: "Six threads run through the book — where medicine, faith, and lived experience meet.",
-    image: "media:wilson-mockup-1.webp",
+    image: "/books/book-tilted.webp",
     backgroundImage: "media:africa-madagascar-planet-earth-1-1-scaled.webp",
     themes: [
       { id: "t1", icon: "infinity", title: "Life After Death", text: "Documented events suggesting consciousness continues beyond the body." },
@@ -83,7 +83,7 @@ export const DEFAULT_CONTENT: SiteContent = {
   chapters: {
     eyebrow: "Featured Chapters",
     heading: "Inside the Book",
-    image: "media:wilson-mockup-2.webp",
+    image: "/books/book-tilted.webp",
     items: [
       {
         id: "c1",
@@ -126,7 +126,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     eyebrow: "Readers Impact",
     heading: "Why This Book Matters",
     body: "This book offers comfort to those who fear death, clarity to those seeking purpose, and reassurance to anyone who has lost a loved one. It invites readers to see life as a meaningful journey with a continuation beyond what we can see.",
-    image: "media:WILson-moc-6-scaled.webp",
+    image: "/books/books-pair.webp",
     pillars: [
       { id: "p1", title: "Comfort", text: "For those who fear death." },
       { id: "p2", title: "Clarity", text: "For those seeking purpose." },

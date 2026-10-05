@@ -34,8 +34,9 @@ export default function ForWhom({ impact }: { impact: SiteContent["impact"] }) {
             })}
           </div>
         </div>
-        <div data-reveal className="overflow-hidden rounded-[28px] shadow-[0_40px_80px_-40px_rgba(11,22,56,0.6)]">
-          <SmartImage src={impact.image} alt="The book in a reader's hands" loading="lazy" className="h-auto w-full" fallback={<div className="aspect-[3/2] bg-gradient-to-br from-navy-2 to-navy" />} />
+        <div data-reveal className="relative">
+          <div className="absolute inset-[12%] -z-0 rounded-full bg-[radial-gradient(closest-side,rgba(201,163,90,0.35),transparent)] blur-2xl" />
+          <SmartImage src={impact.image} alt="Postmortem Life Continuation — two editions" loading="lazy" className="relative h-auto w-full drop-shadow-[0_35px_35px_rgba(11,22,56,0.35)]" fallback={<div className="aspect-[3/2] rounded-[28px] bg-gradient-to-br from-navy-2 to-navy" />} />
         </div>
       </div>
     </section>

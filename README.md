@@ -39,8 +39,8 @@ cover, warm paper-white reading sections, Instrument Serif headings and Inter Ti
 Motion is calm and purposeful (GSAP + ScrollTrigger, Lenis smooth scroll): gentle fade-ups, the book
 rotating in, subtle parallax. Phones get a sticky “Buy” bar. Everything respects `prefers-reduced-motion`.
 
-**Tip:** upload a flat image of the front cover under Dashboard → Website → About the book → *Flat front
-cover* and the 3D book will wear the real artwork. Until then the cover is drawn to match.
+The real book mockups, the flat front cover and the logo ship with the site in `public/books/` (no
+WordPress needed for them). Any of them can be swapped in Dashboard → Website.
 
 ### Background videos
 
@@ -53,7 +53,8 @@ Any video can be swapped for your own `.mp4`/`.webm` URL from **Dashboard → We
 
 ### Images
 
-Images still load from the WordPress uploads folder (`media:` references, see `src/lib/media.ts`).
+The book images and logo are bundled in `public/books/`. The author portrait and the hero/Earth
+backdrops still load from the WordPress uploads folder (`media:` references, see `src/lib/media.ts`).
 **Before WordPress is switched off:**
 
 ```bash

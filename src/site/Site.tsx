@@ -114,7 +114,7 @@ export default function Site() {
 
       <main id="main">
         <Hero content={content} retailer={retailer} onExcerpt={openExcerpt} showAnnouncement={show.announcement} />
-        {show.book && <AboutBook book={content.book} booksImage={content.hero.booksImage} title={content.hero.title} retailer={retailer} />}
+        {show.book && <AboutBook book={content.book} booksImage={content.book.image} title={content.hero.title} retailer={retailer} />}
         {show.explores && <Discover explores={content.explores} />}
         {show.chapters && <Inside chapters={content.chapters} cover={cover} retailer={retailer} hasExcerpt={hasExcerpt} onExcerpt={openExcerpt} />}
         {show.author && <Author author={content.author} />}

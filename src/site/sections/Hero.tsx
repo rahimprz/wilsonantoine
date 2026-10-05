@@ -33,6 +33,17 @@ export default function Hero({ content, retailer, onExcerpt, showAnnouncement }:
         // as you scroll on, the book rises a little and the sky deepens
         gsap.to(q("[data-book-par]"), { yPercent: -12, ease: "none", scrollTrigger: { trigger: root.current, start: "top top", end: "bottom top", scrub: true } });
         gsap.to(q("[data-sky]"), { yPercent: 18, ease: "none", scrollTrigger: { trigger: root.current, start: "top top", end: "bottom top", scrub: true } });
+        // the book leans toward the pointer (mouse only)
+        if (window.matchMedia("(pointer: fine)").matches) {
+          const ry = gsap.quickTo(q("[data-tilt]"), "rotateY", { duration: 1.2, ease: "power3.out" });
+          const rx = gsap.quickTo(q("[data-tilt]"), "rotateX", { duration: 1.2, ease: "power3.out" });
+          const onMove = (e: PointerEvent) => {
+            ry((e.clientX / window.innerWidth - 0.5) * 12);
+            rx(-(e.clientY / window.innerHeight - 0.5) * 8);
+          };
+          window.addEventListener("pointermove", onMove);
+          return () => window.removeEventListener("pointermove", onMove);
+        }
       });
     },
     { scope: root },
@@ -101,8 +112,16 @@ export default function Hero({ content, retailer, onExcerpt, showAnnouncement }:
         <div className="relative max-lg:order-1">
           <div className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[80%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(201,163,90,0.35),rgba(42,196,234,0.12)_60%,transparent)] blur-2xl" />
           <div data-book-par>
-            <div data-book className="mx-auto w-[min(50vw,300px)] lg:w-[min(30vw,400px)]">
-              <Book3D cover={book.cover} />
+            <div data-book className="mx-auto w-[min(78vw,440px)] lg:w-[min(42vw,580px)] [perspective:1400px]">
+              <div data-tilt className="animate-float">
+                <SmartImage
+                  src={hero.booksImage}
+                  alt={`${hero.title} by ${author.name} — hardcover`}
+                  fetchPriority="high"
+                  className="h-auto w-full drop-shadow-[0_45px_50px_rgba(0,0,0,0.6)]"
+                  fallback={<Book3D className="mx-auto w-[62%]" cover={book.cover} />}
+                />
+              </div>
             </div>
           </div>
         </div>
