@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
-import { gsap } from "../../lib/gsap";
+import { useEffect, useState } from "react";
+import { ArrowUpRight, Menu, X } from "lucide-react";
+import { resolveMedia } from "../../lib/media";
 import type { Retailer } from "../../data/types";
 import { onBuyClick } from "../buy";
 import { lockScroll, scrollToTarget } from "../smooth";
@@ -10,23 +10,20 @@ export interface NavItem {
   label: string;
 }
 
-/**
- * Minimal masthead. The wordmark and links use mix-blend-difference, so the same white type reads
- * as white over the dark threshold and as ink over the ivory pages — no colour switching needed.
- */
-export default function Header({ nav, retailer }: { nav: NavItem[]; retailer?: Retailer }) {
+/** Transparent over the hero, solid navy once scrolled — so the logo always sits on its own colour. */
+export default function Header({ nav, retailer, logo, brand }: { nav: NavItem[]; retailer?: Retailer; logo: string; brand: string }) {
+  const [solid, setSolid] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState("");
-  const menu = useRef<HTMLDivElement>(null);
+  const [logoFailed, setLogoFailed] = useState(false);
 
-  // active link = the last section whose top has passed 45% of the viewport. Measured live, so it
-  // stays right around the pinned scenes (whose spacers shift every position below them).
   useEffect(() => {
     let raf = 0;
     const update = () => {
       raf = 0;
-      const line = window.innerHeight * 0.45;
-      let current = nav[0]?.id ?? "";
+      setSolid(window.scrollY > 30);
+      const line = window.innerHeight * 0.4;
+      let current = "";
       for (const { id } of nav) {
         const el = document.getElementById(id);
         if (el && el.getBoundingClientRect().top <= line) current = id;
@@ -38,29 +35,18 @@ export default function Header({ nav, retailer }: { nav: NavItem[]; retailer?: R
     };
     update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
     };
   }, [nav]);
 
   useEffect(() => {
     lockScroll(open);
-    if (!open || !menu.current) return;
-    const tl = gsap.timeline();
-    tl.fromTo(menu.current, { clipPath: "inset(0% 0% 100% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.9, ease: "expo.inOut" }).from(
-      menu.current.querySelectorAll("[data-item]"),
-      { yPercent: 110, duration: 1, stagger: 0.06, ease: "expo.out" },
-      "-=0.35",
-    );
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
-    return () => {
-      tl.kill();
-      window.removeEventListener("keydown", onKey);
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
   const go = (id: string) => {
@@ -69,85 +55,52 @@ export default function Header({ nav, retailer }: { nav: NavItem[]; retailer?: R
   };
 
   return (
-    <>
-      {/* blended layer: white type in a difference blend reads on both the dark threshold and ivory pages.
-          It has to be the fixed element itself, or the blend stays trapped in its own stacking context. */}
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-50 text-white mix-blend-difference">
-        <div className="wrap flex h-20 items-center justify-between gap-6">
-          <button onClick={() => go("home")} className="pointer-events-auto flex items-baseline gap-2" aria-label="Wilson Antoine, MD — back to the top">
-            <span className="display text-[1.65rem] leading-none">Wilson Antoine</span>
-            <span className="label text-[0.62rem] opacity-70">MD</span>
-          </button>
+    <header className={`fixed inset-x-0 top-0 z-50 transition-[background-color,box-shadow] duration-500 ${solid || open ? "bg-navy/90 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl" : "bg-transparent"}`}>
+      <div className="wrap flex h-[76px] items-center justify-between gap-6">
+        <button onClick={() => go("home")} aria-label={`${brand} — back to top`} className="shrink-0">
+          {!logoFailed ? (
+            <img src={resolveMedia(logo)} alt={brand} className="h-11 w-auto md:h-12" onError={() => setLogoFailed(true)} />
+          ) : (
+            <span className="title text-2xl text-white">
+              Wilson Antoine <span className="text-sm text-gold-light">MD</span>
+            </span>
+          )}
+        </button>
 
-          <nav aria-label="Main" className="pointer-events-auto hidden items-center gap-7 lg:flex">
-            {nav.slice(1).map((item, i) => (
-              <button
-                key={item.id}
-                onClick={() => go(item.id)}
-                className="group label flex items-center gap-1.5 text-[0.68rem]"
-                aria-current={active === item.id ? "true" : undefined}
-              >
-                <span className="opacity-50">{String(i + 1).padStart(2, "0")}</span>
-                <span className="relative">
-                  {item.label}
-                  <span className={`absolute -bottom-1 left-0 h-px w-full origin-left bg-current transition-transform duration-500 ${active === item.id ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`} />
-                </span>
-              </button>
-            ))}
-          </nav>
-
-          {/* spacer the size of the (unblended) buy pill + menu button */}
-          <div className="flex items-center gap-2">
-            <span className="w-[5.5rem] sm:w-[9.5rem]" aria-hidden />
+        <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+          {nav.map((n) => (
             <button
-              onClick={() => setOpen((o) => !o)}
-              className="label pointer-events-auto rounded-full px-4 py-2.5 text-[0.68rem] ring-1 ring-white/70 lg:hidden"
-              aria-expanded={open}
-              aria-label={open ? "Close menu" : "Open menu"}
+              key={n.id}
+              onClick={() => go(n.id)}
+              aria-current={active === n.id ? "true" : undefined}
+              className={`rounded-full px-4 py-2 text-[0.9rem] font-medium transition-colors ${active === n.id ? "text-gold-light" : "text-white/80 hover:text-white"}`}
             >
-              {open ? "Close" : "Menu"}
+              {n.label}
             </button>
-          </div>
-        </div>
-      </header>
+          ))}
+        </nav>
 
-      {retailer && (
-        <div className="pointer-events-none fixed inset-x-0 top-0 z-50">
-          <div className="wrap flex h-20 items-center justify-end">
-            <a
-              href={retailer.url}
-              target="_blank"
-              rel="noopener"
-              onClick={() => onBuyClick(retailer)}
-              className="pill pill-ember pointer-events-auto !px-4 !py-2.5 !text-[0.82rem] max-lg:mr-[5.6rem] sm:!px-5"
-            >
-              Buy<span className="hidden sm:inline"> the book</span> <ArrowUpRight className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          {retailer && (
+            <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-buy !px-5 !py-2.5 !text-[0.85rem]">
+              Buy now <ArrowUpRight className="h-4 w-4" />
             </a>
-          </div>
+          )}
+          <button onClick={() => setOpen((o) => !o)} className="grid h-11 w-11 place-items-center rounded-full text-white ring-1 ring-white/25 lg:hidden" aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open}>
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
-      )}
+      </div>
 
       {open && (
-        <div ref={menu} className="fixed inset-0 z-40 flex flex-col justify-between bg-ink px-6 pt-28 pb-10 text-ivory lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <nav className="flex flex-col">
-            {nav.map((item, i) => (
-              <div key={item.id} className="overflow-hidden border-b border-ivory/10">
-                <button data-item onClick={() => go(item.id)} className="flex w-full items-baseline gap-4 py-4 text-left">
-                  <span className="label text-[0.65rem] text-sand">{String(i).padStart(2, "0")}</span>
-                  <span className="display text-[clamp(2.4rem,11vw,4rem)]">{item.label}</span>
-                </button>
-              </div>
-            ))}
-          </nav>
-          {retailer && (
-            <div className="overflow-hidden">
-              <a data-item href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="pill pill-ember w-full justify-center">
-                Buy on {retailer.label} <ArrowUpRight className="h-4 w-4" />
-              </a>
-            </div>
-          )}
-        </div>
+        <nav aria-label="Mobile" className="wrap flex h-[calc(100svh-76px)] flex-col gap-1 pt-6 pb-10 lg:hidden">
+          {nav.map((n) => (
+            <button key={n.id} onClick={() => go(n.id)} className="title border-b border-white/10 py-4 text-left text-4xl text-white animate-[fade-in_0.5s_ease_both]">
+              {n.label}
+            </button>
+          ))}
+        </nav>
       )}
-    </>
+    </header>
   );
 }

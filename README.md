@@ -17,35 +17,35 @@ npm run preview
 
 ---
 
-## The website — “The Threshold”
+## The website
 
-An editorial design in warm ivory and ink with a single ember accent — Instrument Serif display type,
-Inter Tight for text, JetBrains Mono for small labels. The idea runs through the scroll: the site opens
-in the dark at a doorway of light, and you step *through* it into the light of the pages.
+A focused book site: the cover leads, and every section answers a reader's question — what is it,
+what's inside, who wrote it, what do readers say, where do I buy it. Deep navy and gold to match the
+cover, warm paper-white reading sections, Instrument Serif headings and Inter Tight text.
 
-| Section | What happens |
+| Section | What it does |
 |---|---|
-| **Opening** | A serif count from 00 to 100 while a thread of light draws, then the ink curtain parts. Once per visit. |
-| **The threshold (hero)** | A glowing arch with the light-tunnel video inside, the title spread across it in a difference blend. Scrolling pins the scene and the doorway swells until its light fills the screen. |
-| **The book** | The opening sentence darkens word by word; the books open out from a slit to full width; an arch-framed image drifts inside its frame; highlights set as i. ii. iii. with drawn rules. |
-| **Six threads** | Pinned horizontal gallery — vertical scroll slides the themes sideways, giant outlined numerals drifting at their own pace, with a progress rule. Vertical list on phones. |
-| **Author** | His name runs as a giant band of type with scroll; the portrait unmasks inside an arch; bio darkens as you read; “30+” counts up. |
-| **Contents** | A printed-style table of contents. Rows fill with ink on hover while the book floats beside the pointer, tilting with its speed; open a row for the summary. |
-| **Interlude** | A small window of rising light opens to full-bleed, the premise lighting up word by word over it. |
-| **Why it matters** | Sticky statement beside cards that stack like pages laid on a pile. |
-| **Voices** | One review at a time, large, cycling on a timer shown in the tabs. |
-| **Begin the journey** | Scroll-driven running headline, the book standing in a window of night, stores as big rows that fill with ink. |
-| **Footer** | Newsletter on an underline, index, links, and the name rising letter by letter. |
+| **Hero** | The book in 3D (turns gently, tilts with the pointer) beside the title, subtitle, author, **Buy on Amazon**, “Read an Excerpt”, the format, and a reader quote. |
+| **About the book** | The editions photo, the description with a drop cap, the three highlights, a buy button. |
+| **What you'll discover** | The six themes as clean cards. |
+| **Inside the book** | Featured chapters as an accordion beside the book image; excerpt + buy buttons. |
+| **The author** | Portrait, bio, “30+ years” and other highlights counting up. |
+| **Why it matters** | Who the book is for — Comfort, Clarity, Reassurance. |
+| **Premise** | One line over the rising-light video. |
+| **Reviews** | Reader review cards with stars. |
+| **Get your copy** | The 3D book and one card per edition/store (add Paperback, Hardcover, Audiobook… in the dashboard and they appear here). |
+| **Footer** | Newsletter sign-up, links, socials. |
 
-Also: Lenis smooth scrolling, a difference-blend masthead that reads on dark and light alike, a
-custom cursor that opens into “Open / Read / Buy” discs, a scroll progress line, a full-screen menu on
-phones, and an excerpt reader set like a printed page. Everything respects `prefers-reduced-motion`,
-and if an image can't load, a CSS-drawn cover stands in.
+Motion is calm and purposeful (GSAP + ScrollTrigger, Lenis smooth scroll): gentle fade-ups, the book
+rotating in, subtle parallax. Phones get a sticky “Buy” bar. Everything respects `prefers-reduced-motion`.
+
+**Tip:** upload a flat image of the front cover under Dashboard → Website → About the book → *Flat front
+cover* and the 3D book will wear the real artwork. Until then the cover is drawn to match.
 
 ### Background videos
 
 `public/videos/` holds three seamless loops (MP4 + WebM + poster), ~1.3 MB in total as WebM:
-`light-tunnel` (inside the hero doorway), `rising-light` (interlude) and `nebula-drift` (buy section). They are original —
+`nebula-drift` (hero), `rising-light` (premise) and `light-tunnel` (buy section). They are original —
 rendered from GLSL shaders in `scripts/render-videos/` — so there's no stock licence to track. To tweak
 and re-render: `npx playwright install chromium && npm run render:videos` (needs ffmpeg).
 

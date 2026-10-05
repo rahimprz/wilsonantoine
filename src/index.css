@@ -17,6 +17,12 @@
   --color-haze: #6f7aa8;
 
   /* "The Threshold" — the public site's editorial palette */
+  --color-navy: #0b1638;
+  --color-navy-2: #13235a;
+  --color-cream: #fbf8f2;
+  --color-sandlight: #f3ecdf;
+  --color-inkblue: #161c36;
+  --color-slate: #565d7a;
   --color-ink: #0f0d0a;
   --color-ink-2: #1b1813;
   --color-ivory: #f4efe6;
@@ -162,120 +168,90 @@ html.lenis body {
   to { transform: none; }
 }
 
-/* ---------------------------------------------------------------- the public site */
+/* ---------------------------------------------------------------- the public site (book site) */
 .site {
-  background: var(--color-ivory);
-  color: var(--color-ink);
+  background: var(--color-cream);
+  color: var(--color-inkblue);
   font-family: var(--font-grotesk);
   font-size: 17px;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 .site ::selection {
-  background: var(--color-ember);
-  color: var(--color-ivory);
-}
-.site :focus-visible {
-  outline: 2px solid var(--color-ember);
+  background: var(--color-gold);
+  color: var(--color-navy);
 }
 
 @layer components {
   .wrap {
     width: 100%;
-    max-width: 1440px;
+    max-width: 1240px;
     margin-inline: auto;
-    padding-inline: clamp(1.25rem, 4vw, 3.5rem);
+    padding-inline: clamp(1.25rem, 4vw, 2.5rem);
   }
-  .label {
-    font-family: var(--font-label);
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
+  .kicker {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
+    color: var(--color-gold-deep);
   }
-  .display {
+  .on-dark .kicker {
+    color: var(--color-gold-light);
+  }
+  .title {
     font-family: var(--font-editorial);
     font-weight: 400;
-    line-height: 0.92;
-    letter-spacing: -0.02em;
+    line-height: 1.02;
+    letter-spacing: -0.01em;
   }
-  .arch {
-    border-radius: 999px 999px 0 0;
-  }
-  .pill {
-    position: relative;
+  .btn-buy,
+  .btn-ghost-light,
+  .btn-ghost-dark {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.6rem;
-    overflow: hidden;
-    isolation: isolate;
     border-radius: 999px;
-    padding: 0.95rem 1.6rem;
-    font-size: 0.92rem;
-    font-weight: 500;
-    letter-spacing: 0.01em;
+    padding: 0.95rem 1.7rem;
+    font-weight: 600;
+    font-size: 0.95rem;
     white-space: nowrap;
-    transition: color 0.5s var(--ease-out-expo), border-color 0.5s var(--ease-out-expo);
+    transition:
+      transform 0.4s var(--ease-out-expo),
+      box-shadow 0.4s var(--ease-out-expo),
+      background-color 0.3s ease,
+      color 0.3s ease,
+      border-color 0.3s ease;
   }
-  /* fill that rises from below on hover */
-  .pill::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    transform: translateY(101%);
-    transition: transform 0.6s var(--ease-out-expo);
+  .btn-buy {
+    background: linear-gradient(135deg, #e3cb95, #c9a35a 55%, #a8843f);
+    color: #14100a;
+    box-shadow: 0 12px 30px -12px rgb(201 163 90 / 0.8), inset 0 1px 0 rgb(255 255 255 / 0.45);
   }
-  .pill:hover::before {
-    transform: translateY(0);
+  .btn-buy:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px -14px rgb(201 163 90 / 0.95), inset 0 1px 0 rgb(255 255 255 / 0.5);
   }
-  .pill-ink {
-    background: var(--color-ink);
-    color: var(--color-ivory);
-  }
-  .pill-ink::before {
-    background: var(--color-ember);
-  }
-  .pill-ember {
-    background: var(--color-ember);
+  .btn-ghost-light {
+    border: 1.5px solid rgb(255 255 255 / 0.4);
     color: #fff;
   }
-  .pill-ember::before {
-    background: var(--color-ink);
+  .btn-ghost-light:hover {
+    border-color: #fff;
+    background: rgb(255 255 255 / 0.08);
   }
-  .pill-line {
-    border: 1px solid currentColor;
+  .btn-ghost-dark {
+    border: 1.5px solid rgb(11 22 56 / 0.25);
+    color: var(--color-navy);
   }
-  .pill-line:hover {
-    color: var(--color-ivory);
-    border-color: var(--color-ink);
+  .btn-ghost-dark:hover {
+    border-color: var(--color-navy);
+    background: rgb(11 22 56 / 0.04);
   }
-  .pill-line::before {
-    background: var(--color-ink);
-  }
-  .pill-line-light {
-    border: 1px solid rgb(244 239 230 / 0.4);
-    color: var(--color-ivory);
-  }
-  .pill-line-light:hover {
-    color: var(--color-ink);
-    border-color: var(--color-ivory);
-  }
-  .pill-line-light::before {
-    background: var(--color-ivory);
-  }
-  .rule {
-    height: 1px;
-    background: currentColor;
-    opacity: 0.18;
-  }
-  .paper-grain::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0.35;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.38 0 0 0 0 0.3 0 0 0 0.35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  .card {
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 1px 0 rgb(11 22 56 / 0.04), 0 20px 50px -30px rgb(11 22 56 / 0.35);
   }
 }
 

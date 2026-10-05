@@ -190,6 +190,8 @@ export default function Website() {
                   </Group>
                   <Text label="Button label" value={draft.book.ctaLabel} onChange={(v) => patch("book", { ctaLabel: v })} />
                   <ImageInput label="Image" value={draft.book.image} original={DEFAULT_CONTENT.book.image} onChange={(v) => patch("book", { image: v })} />
+                  <ImageInput label="Flat front cover (optional)" value={draft.book.cover} original={DEFAULT_CONTENT.book.cover} onChange={(v) => patch("book", { cover: v })} />
+                  <p className="-mt-3 text-xs text-haze">A straight-on image of just the front cover (no mockup). When set, the 3D book on the site shows it; when empty, the cover is drawn to match.</p>
                 </>
               )}
 

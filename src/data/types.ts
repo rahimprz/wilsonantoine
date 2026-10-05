@@ -69,7 +69,7 @@ export interface SiteContent {
     backgroundImage: string;
     backgroundVideo: string;
   };
-  book: { eyebrow: string; heading: string; body: string; bullets: string[]; image: string; ctaLabel: string };
+  book: { eyebrow: string; heading: string; body: string; bullets: string[]; image: string; ctaLabel: string; cover: string };
   marquee: { items: string[] };
   explores: { eyebrow: string; heading: string; intro: string; image: string; backgroundImage: string; themes: Theme[] };
   author: { eyebrow: string; name: string; credentials: string; bio: string; image: string; highlights: Highlight[] };

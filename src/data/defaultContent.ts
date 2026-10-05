@@ -27,7 +27,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     secondaryCta: "Buy the Book",
     booksImage: "media:wetgfwertwe.png",
     backgroundImage: "media:view-universe-space-shot-milky-way-galaxy-scaled.webp",
-    backgroundVideo: "/videos/light-tunnel.mp4",
+    backgroundVideo: "/videos/nebula-drift.mp4",
   },
   book: {
     eyebrow: "The Book",
@@ -40,6 +40,8 @@ export const DEFAULT_CONTENT: SiteContent = {
     ],
     image: "media:wfwed.png",
     ctaLabel: "Know About Author",
+    // a flat image of the front cover (optional) — when set, the 3D book wears it
+    cover: "",
   },
   marquee: {
     items: [
@@ -52,7 +54,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     ],
   },
   explores: {
-    eyebrow: "Six Threads",
+    eyebrow: "What You'll Discover",
     heading: "What This Book Explores",
     intro: "Six threads run through the book — where medicine, faith, and lived experience meet.",
     image: "media:wilson-mockup-1.webp",
@@ -144,7 +146,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     eyebrow: "Your Copy",
     heading: "Begin the Journey",
     body: "Discover the evidence. Explore the truth. Embrace the continuation of life.",
-    video: "/videos/nebula-drift.mp4",
+    video: "/videos/light-tunnel.mp4",
     retailers: [
       {
         id: "amazon-kindle",

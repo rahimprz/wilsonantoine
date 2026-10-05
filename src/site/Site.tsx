@@ -4,20 +4,19 @@ import { gsap, prefersReducedMotion, ScrollTrigger } from "../lib/gsap";
 import { track } from "../lib/analytics";
 import { useStore } from "../lib/store";
 import { contentStore } from "../data/stores";
-import Cursor from "./components/Cursor";
 import ExcerptModal from "./components/ExcerptModal";
 import Header, { type NavItem } from "./components/Header";
-import Preloader from "./components/Preloader";
+import MobileBuyBar from "./components/MobileBuyBar";
+import AboutBook from "./sections/AboutBook";
 import Author from "./sections/Author";
-import Book from "./sections/Book";
-import Contents from "./sections/Contents";
+import Discover from "./sections/Discover";
 import Footer from "./sections/Footer";
+import ForWhom from "./sections/ForWhom";
+import GetCopy from "./sections/GetCopy";
 import Hero from "./sections/Hero";
-import Impact from "./sections/Impact";
-import Interlude from "./sections/Interlude";
-import Journey from "./sections/Journey";
-import Threads from "./sections/Threads";
-import Voices from "./sections/Voices";
+import Inside from "./sections/Inside";
+import Premise from "./sections/Premise";
+import Reviews from "./sections/Reviews";
 import { primaryRetailer } from "./buy";
 import { scrollToTarget, setLenis } from "./smooth";
 
@@ -85,16 +84,14 @@ export default function Site() {
 
   const nav = useMemo<NavItem[]>(() => {
     const items: (NavItem | false)[] = [
-      { id: "home", label: "Threshold" },
       show.book && { id: "about-book", label: "The Book" },
-      show.explores && { id: "explores", label: "Threads" },
-      show.author && { id: "author", label: "Author" },
-      show.chapters && { id: "chapters", label: "Contents" },
-      show.reviews && content.reviews.items.length > 0 && { id: "reviews", label: "Voices" },
-      show.buy && { id: "buy", label: "Buy" },
+      show.chapters && { id: "chapters", label: "Inside" },
+      show.author && { id: "author", label: "The Author" },
+      show.reviews && content.reviews.items.length > 0 && { id: "reviews", label: "Reviews" },
+      show.buy && { id: "buy", label: "Get the Book" },
     ];
     return items.filter(Boolean) as NavItem[];
-  }, [show.book, show.explores, show.author, show.chapters, show.reviews, show.buy, content.reviews.items.length]);
+  }, [show.book, show.author, show.chapters, show.reviews, show.buy, content.reviews.items.length]);
 
   const openExcerpt = useCallback(() => {
     if (hasExcerpt) {
@@ -105,28 +102,31 @@ export default function Site() {
   }, [hasExcerpt, show.chapters, show.book]);
   const closeExcerpt = useCallback(() => setExcerptOpen(false), []);
 
+  const cover = content.book.cover;
+  const authorName = `${content.author.name}${/\bMD\b/.test(content.author.name) ? "" : ", MD"}`;
+
   return (
     <div className="site relative">
-      <Preloader />
-      <Cursor />
       <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px]">
-        <div ref={progress} className="h-full origin-left scale-x-0 bg-ember" />
+        <div ref={progress} className="h-full origin-left scale-x-0 bg-gold" />
       </div>
-      <Header nav={nav} retailer={retailer} />
+      <Header nav={nav} retailer={retailer} logo={content.brand.logo} brand={content.brand.name} />
 
       <main id="main">
-        <Hero hero={content.hero} announcement={show.announcement ? content.announcement : undefined} retailer={retailer} onExcerpt={openExcerpt} />
-        {show.book && <Book book={content.book} booksImage={content.hero.booksImage} retailer={retailer} showAuthorLink={show.author} />}
-        {show.explores && <Threads explores={content.explores} />}
+        <Hero content={content} retailer={retailer} onExcerpt={openExcerpt} showAnnouncement={show.announcement} />
+        {show.book && <AboutBook book={content.book} booksImage={content.hero.booksImage} title={content.hero.title} retailer={retailer} />}
+        {show.explores && <Discover explores={content.explores} />}
+        {show.chapters && <Inside chapters={content.chapters} cover={cover} retailer={retailer} hasExcerpt={hasExcerpt} onExcerpt={openExcerpt} />}
         {show.author && <Author author={content.author} />}
-        {show.chapters && <Contents chapters={content.chapters} retailer={retailer} hasExcerpt={hasExcerpt} onExcerpt={openExcerpt} />}
-        {show.manifesto && content.manifesto.quote && <Interlude manifesto={content.manifesto} />}
-        {show.impact && <Impact impact={content.impact} />}
-        {show.reviews && <Voices reviews={content.reviews} />}
-        {show.buy && <Journey buy={content.buy} />}
+        {show.impact && <ForWhom impact={content.impact} />}
+        {show.manifesto && content.manifesto.quote && <Premise manifesto={content.manifesto} />}
+        {show.reviews && <Reviews reviews={content.reviews} />}
+        {show.buy && <GetCopy buy={content.buy} title={content.hero.title} author={authorName} cover={cover} />}
       </main>
 
-      <Footer footer={content.footer} nav={nav} brand={content.brand.name} />
+      <div className="pt-24 md:pt-32" />
+      <Footer footer={content.footer} nav={nav} logo={content.brand.logo} brand={content.brand.name} />
+      <MobileBuyBar retailer={retailer} title={content.hero.title} />
       <ExcerptModal open={excerptOpen} onClose={closeExcerpt} title={content.excerpt.title} body={content.excerpt.body} retailer={retailer} />
     </div>
   );
