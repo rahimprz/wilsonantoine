@@ -11,6 +11,10 @@ import "@fontsource/jost/600.css";
 import "@fontsource/cormorant-garamond/400-italic.css";
 import "@fontsource/cormorant-garamond/500-italic.css";
 import "@fontsource/cormorant-garamond/600.css";
+import "@fontsource/instrument-serif/400.css";
+import "@fontsource/instrument-serif/400-italic.css";
+import "@fontsource-variable/inter-tight";
+import "@fontsource/jetbrains-mono/400.css";
 import "./index.css";
 import App from "./App";
 

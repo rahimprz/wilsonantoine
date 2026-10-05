@@ -17,37 +17,35 @@ npm run preview
 
 ---
 
-## The website
+## The website — “The Threshold”
 
-Dark, deep-space theme from the original (navy `#2A3663`, royal `#1836A5`, gold `#B59F78`), Orbitron
-headings and Jost body type as before, with Cormorant Garamond italics added for quotes.
+An editorial design in warm ivory and ink with a single ember accent — Instrument Serif display type,
+Inter Tight for text, JetBrains Mono for small labels. The idea runs through the scroll: the site opens
+in the dark at a doorway of light, and you step *through* it into the light of the pages.
 
-| Section | What moves |
+| Section | What happens |
 |---|---|
-| **Preloader** | Logo surfaces from the dark, a gold thread draws, the curtain lifts into the hero. Once per visit. |
-| **Hero** | Galaxy photo with a looping nebula video blended over it; the books rise out of a blur and float; the title cascades in letter by letter; everything parallaxes with the pointer and lifts away on scroll. |
-| **About the book** | Gold parallelogram grows in, the image wipes in from the left, check marks draw themselves; the two layers drift at different speeds. |
-| **Themes ribbon** | Two crossing bands of the book's themes that speed up with scroll velocity. |
-| **What this book explores** | Earth backdrop zooms out as you scroll; the six theme cards fly out from behind the book. |
-| **Meet the author** | Portrait unmasks from below, gold frame slides against it, bio words light up as you read, “30+” counts up. |
-| **Inside the book** | Sticky book that turns as you scroll the chapter accordion; big italic chapter numeral. |
-| **Quote** | Full-screen line over a rising-light video; words brighten one by one. |
-| **Why it matters** | Gold orb and image drift against each other (the original's −2 → 2 parallax). |
-| **Reviews** | Two infinite rows of review cards, opposite directions, pause on hover. |
-| **Begin the journey** | Interactive 3D book (CSS) over a tunnel-of-light video that zooms as you scroll. |
-| **Footer** | Newsletter sign-up (feeds the dashboard), socials, giant outlined wordmark. |
+| **Opening** | A serif count from 00 to 100 while a thread of light draws, then the ink curtain parts. Once per visit. |
+| **The threshold (hero)** | A glowing arch with the light-tunnel video inside, the title spread across it in a difference blend. Scrolling pins the scene and the doorway swells until its light fills the screen. |
+| **The book** | The opening sentence darkens word by word; the books open out from a slit to full width; an arch-framed image drifts inside its frame; highlights set as i. ii. iii. with drawn rules. |
+| **Six threads** | Pinned horizontal gallery — vertical scroll slides the themes sideways, giant outlined numerals drifting at their own pace, with a progress rule. Vertical list on phones. |
+| **Author** | His name runs as a giant band of type with scroll; the portrait unmasks inside an arch; bio darkens as you read; “30+” counts up. |
+| **Contents** | A printed-style table of contents. Rows fill with ink on hover while the book floats beside the pointer, tilting with its speed; open a row for the summary. |
+| **Interlude** | A small window of rising light opens to full-bleed, the premise lighting up word by word over it. |
+| **Why it matters** | Sticky statement beside cards that stack like pages laid on a pile. |
+| **Voices** | One review at a time, large, cycling on a timer shown in the tabs. |
+| **Begin the journey** | Scroll-driven running headline, the book standing in a window of night, stores as big rows that fill with ink. |
+| **Footer** | Newsletter on an underline, index, links, and the name rising letter by letter. |
 
-Also: a fixed starfield that parallaxes and streaks with scroll speed, a cursor halo (mouse only),
-gold scroll-progress line, back-to-top ring, frosted hide-on-scroll header with an active-section pill,
-fullscreen mobile menu, a mobile “Buy” bar, and an excerpt reader.
-
-Everything respects `prefers-reduced-motion` (no preloader, no smooth scroll, videos show a still) and
-pauses videos that are off screen. If an image can't load, a CSS-drawn 3D copy of the book stands in.
+Also: Lenis smooth scrolling, a difference-blend masthead that reads on dark and light alike, a
+custom cursor that opens into “Open / Read / Buy” discs, a scroll progress line, a full-screen menu on
+phones, and an excerpt reader set like a printed page. Everything respects `prefers-reduced-motion`,
+and if an image can't load, a CSS-drawn cover stands in.
 
 ### Background videos
 
 `public/videos/` holds three seamless loops (MP4 + WebM + poster), ~1.3 MB in total as WebM:
-`nebula-drift` (hero), `rising-light` (quote) and `light-tunnel` (buy section). They are original —
+`light-tunnel` (inside the hero doorway), `rising-light` (interlude) and `nebula-drift` (buy section). They are original —
 rendered from GLSL shaders in `scripts/render-videos/` — so there's no stock licence to track. To tweak
 and re-render: `npx playwright install chromium && npm run render:videos` (needs ffmpeg).
 

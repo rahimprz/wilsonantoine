@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight, X } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { gsap } from "../../lib/gsap";
 import type { Retailer } from "../../data/types";
 import { onBuyClick } from "../buy";
@@ -13,26 +13,25 @@ interface ExcerptModalProps {
   retailer?: Retailer;
 }
 
-/** A quiet reading room for the excerpt the author pastes into the dashboard. */
+/** A full-screen reading page on ivory paper for the excerpt pasted into the dashboard. */
 export default function ExcerptModal({ open, onClose, title, body, retailer }: ExcerptModalProps) {
   const root = useRef<HTMLDivElement>(null);
-  const scroller = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     if (!open) return;
     lockScroll(true);
     const el = root.current!;
-    const prevFocus = document.activeElement as HTMLElement | null;
+    const prev = document.activeElement as HTMLElement | null;
     el.querySelector<HTMLElement>("[data-close]")?.focus();
-    gsap.fromTo(el, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" });
-    gsap.fromTo(el.querySelector("[data-panel]"), { y: 60, opacity: 0, scale: 0.98 }, { y: 0, opacity: 1, scale: 1, duration: 0.9, delay: 0.05 });
+    gsap.fromTo(el, { clipPath: "inset(100% 0% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 1, ease: "expo.inOut" });
+    gsap.from(el.querySelectorAll("[data-in]"), { y: 40, opacity: 0, duration: 1, stagger: 0.08, delay: 0.5 });
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
       lockScroll(false);
-      prevFocus?.focus();
+      prev?.focus();
     };
   }, [open, onClose]);
 
@@ -40,41 +39,44 @@ export default function ExcerptModal({ open, onClose, title, body, retailer }: E
   const paragraphs = body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
   return (
-    <div ref={root} className="fixed inset-0 z-[90] flex items-end justify-center bg-void/80 backdrop-blur-md md:items-center" role="dialog" aria-modal="true" aria-label={title || "Excerpt"} onClick={onClose}>
-      <div data-panel className="relative flex max-h-[92svh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-[#0b1029] shadow-2xl md:rounded-3xl" onClick={(e) => e.stopPropagation()}>
-        <div className="h-[2px] bg-white/5">
-          <div className="h-full bg-gradient-to-r from-gold to-cyan transition-[width] duration-150" style={{ width: `${progress * 100}%` }} />
-        </div>
-        <div className="flex items-center justify-between gap-4 border-b border-white/5 px-6 py-4 md:px-10">
-          <p className="eyebrow !text-[0.7rem]">Excerpt</p>
-          <button data-close onClick={onClose} aria-label="Close excerpt" className="grid h-10 w-10 place-items-center rounded-full border border-white/15 text-white/80 transition hover:border-gold hover:text-gold">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        <div
-          ref={scroller}
-          data-lenis-prevent
-          className="overflow-y-auto px-6 py-8 md:px-14 md:py-12"
-          onScroll={(e) => {
-            const t = e.currentTarget;
-            setProgress(t.scrollHeight > t.clientHeight ? t.scrollTop / (t.scrollHeight - t.clientHeight) : 1);
-          }}
-        >
-          {title && <h2 className="mb-8 font-display text-2xl font-semibold text-white md:text-3xl">{title}</h2>}
-          <div className="space-y-6 font-serif text-[1.35rem] leading-[1.75] text-star/90 first-letter:float-left first-letter:mr-3 first-letter:font-display first-letter:text-6xl first-letter:leading-none first-letter:text-gold">
+    <div ref={root} className="site paper-grain fixed inset-0 z-[95] flex flex-col bg-ivory" role="dialog" aria-modal="true" aria-label={title || "Excerpt"}>
+      <div className="h-[2px] bg-ink/10">
+        <div className="h-full bg-ember" style={{ width: `${progress * 100}%` }} />
+      </div>
+      <div className="wrap flex h-16 shrink-0 items-center justify-between">
+        <p className="label text-stone">An excerpt</p>
+        <button data-close onClick={onClose} className="pill pill-line !py-2 !text-[0.8rem]">
+          Close
+        </button>
+      </div>
+      <div
+        data-lenis-prevent
+        className="flex-1 overflow-y-auto"
+        onScroll={(e) => {
+          const t = e.currentTarget;
+          setProgress(t.scrollHeight > t.clientHeight ? t.scrollTop / (t.scrollHeight - t.clientHeight) : 1);
+        }}
+      >
+        <article className="mx-auto max-w-2xl px-6 pt-10 pb-24">
+          {title && (
+            <h2 data-in className="display mb-12 text-[clamp(2.6rem,7vw,5rem)]">
+              {title}
+            </h2>
+          )}
+          <div data-in className="space-y-7 font-editorial text-[1.45rem] leading-[1.65] first-letter:float-left first-letter:mr-3 first-letter:text-[4.6rem] first-letter:leading-[0.85] first-letter:text-ember">
             {paragraphs.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
           </div>
           {retailer && (
-            <div className="mt-12 rounded-2xl border border-gold/30 bg-gradient-to-br from-royal/30 to-transparent p-6 text-center md:p-8">
-              <p className="font-serif text-2xl italic text-white">Continue the journey.</p>
-              <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn btn-gold mt-5">
+            <div data-in className="mt-16 border-t border-ink/15 pt-10 text-center">
+              <p className="display text-4xl italic">Continue the journey.</p>
+              <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="pill pill-ink mt-6">
                 Get the full book <ArrowUpRight className="h-4 w-4" />
               </a>
             </div>
           )}
-        </div>
+        </article>
       </div>
     </div>
   );
