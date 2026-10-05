@@ -1,0 +1,299 @@
+<!doctype html>
+<!--
+  Offline renderer for the site's looping background videos.
+  render.mjs opens this page in headless Chromium, calls window.renderFrame(phase) for each frame
+  (phase runs 0 → 1 over one loop) and pipes the pixels into ffmpeg.
+
+  Every moving part is periodic in `phase`, so frame N and frame 0 are identical and the
+  videos loop with no visible seam:
+    - nebula clouds evolve through value noise that tiles along its third axis
+    - star layers zoom toward the camera on a fract() cycle
+    - twinkles, streaks and motes use integer-frequency sines / fract() offsets
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      html, body { margin: 0; background: #000; }
+      canvas { display: block; }
+    </style>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+    <script>
+      const COMMON = `
+precision highp float;
+uniform vec2 uRes;
+uniform float uT;      // loop phase, 0..1
+uniform float uSeed;   // grain seed, changes every frame
+const float TAU = 6.28318530718;
+
+float hash3(vec3 p, float P) {
+  p.z = mod(p.z, P);
+  p = fract(p * vec3(0.1031, 0.1030, 0.0973));
+  p += dot(p, p.yxz + 33.33);
+  return fract((p.x + p.y) * p.z);
+}
+float hash2(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+vec2 hash22(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.xx + p3.yz) * p3.zy);
+}
+// value noise whose third axis repeats every P units
+float vnoise(vec3 x, float P) {
+  vec3 i = floor(x);
+  vec3 f = fract(x);
+  vec3 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+  float a = hash3(i, P);
+  float b = hash3(i + vec3(1, 0, 0), P);
+  float c = hash3(i + vec3(0, 1, 0), P);
+  float d = hash3(i + vec3(1, 1, 0), P);
+  float e = hash3(i + vec3(0, 0, 1), P);
+  float f1 = hash3(i + vec3(1, 0, 1), P);
+  float g = hash3(i + vec3(0, 1, 1), P);
+  float h = hash3(i + vec3(1, 1, 1), P);
+  return mix(mix(mix(a, b, u.x), mix(c, d, u.x), u.y), mix(mix(e, f1, u.x), mix(g, h, u.x), u.y), u.z);
+}
+// fbm that still loops: z and its period double together each octave
+float fbm(vec2 p, float z, float P) {
+  float s = 0.0, a = 0.5;
+  mat2 r = mat2(0.8, -0.6, 0.6, 0.8);
+  for (int k = 0; k < 5; k++) {
+    s += a * vnoise(vec3(p, z), P);
+    p = r * p * 2.03 + 11.7;
+    z *= 2.0; P *= 2.0; a *= 0.5;
+  }
+  return s;
+}
+float grain(vec2 fc) { return (hash2(fc + uSeed * 97.13) - 0.5) / 255.0 * 3.0; }
+`;
+
+      // ---------------------------------------------------------------- nebula drift (hero)
+      const NEBULA = COMMON + `
+float starLayer(vec2 uv, float scale, float seed, float twinkleK) {
+  vec2 g = uv * scale;
+  vec2 id = floor(g);
+  vec2 f = fract(g) - 0.5;
+  float s = 0.0;
+  vec2 h = hash22(id + seed);
+  if (h.x > 0.62) {
+    vec2 o = (hash22(id + seed + 4.1) - 0.5) * 0.7;
+    float d = length(f - o);
+    float size = mix(0.015, 0.06, pow(h.y, 6.0));
+    float tw = 0.65 + 0.35 * sin(TAU * (twinkleK * uT + h.y * 7.0));
+    s = smoothstep(size, 0.0, d) * tw * (0.35 + 0.65 * h.y);
+    // diffraction glint on the brightest few
+    if (h.y > 0.93) {
+      vec2 q = abs(f - o);
+      s += (smoothstep(0.012, 0.0, q.y) * smoothstep(0.32, 0.0, q.x) + smoothstep(0.012, 0.0, q.x) * smoothstep(0.32, 0.0, q.y)) * 0.35 * tw;
+    }
+  }
+  return s;
+}
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+  float ang = TAU * uT;
+  vec2 drift = vec2(cos(ang), sin(ang)) * 0.06;
+
+  // clouds: domain-warped fbm evolving along the looping axis
+  vec2 p = uv * 1.6 + drift;
+  float z = uT * 4.0;
+  vec2 w = vec2(fbm(p + 3.1, z, 4.0), fbm(p + 8.7, z + 1.7, 4.0));
+  float n = fbm(p + 1.8 * w, z, 4.0);
+  float m = fbm(p * 2.2 - w, z + 2.3, 4.0);
+
+  vec3 col = vec3(0.012, 0.016, 0.05);
+  // a diagonal "milky way" band to echo the original hero photograph
+  float band = exp(-pow((uv.y + uv.x * 0.42 + 0.08) * 2.3, 2.0));
+  float fil = fbm(p * 4.5 + w * 2.0, z * 2.0 + 0.4, 8.0);
+  float cloud = smoothstep(0.32, 0.9, n) * (0.25 + 1.1 * band) * (0.55 + 0.75 * fil);
+  vec3 deepBlue = vec3(0.10, 0.20, 0.72);
+  vec3 violet = vec3(0.36, 0.16, 0.55);
+  vec3 cyan = vec3(0.16, 0.70, 0.86);
+  vec3 gold = vec3(0.71, 0.62, 0.47);
+  col += deepBlue * cloud * 0.55;
+  col += violet * smoothstep(0.45, 0.95, m) * (0.25 + 0.55 * band) * 0.6;
+  col += cyan * pow(smoothstep(0.55, 1.0, n * m * 1.6), 2.0) * 0.35;
+  col += gold * pow(smoothstep(0.62, 1.0, n), 3.0) * band * 0.45;
+  // dust lanes darken the band
+  col *= 1.0 - 0.55 * smoothstep(0.5, 0.85, fbm(p * 3.0 + 5.0, z + 0.9, 4.0)) * band;
+
+  // stars drifting toward the viewer: layers zoom on a fract() cycle
+  float stars = 0.0;
+  for (int i = 0; i < 4; i++) {
+    float fi = float(i);
+    float depth = fract(fi / 4.0 + uT);
+    float scale = mix(26.0, 3.0, depth);
+    float fade = smoothstep(0.0, 0.35, depth) * smoothstep(1.0, 0.82, depth);
+    stars += starLayer(uv + drift * (0.5 + depth), scale, fi * 13.7, 2.0 + fi) * fade;
+  }
+  // a fixed, very fine background field
+  stars += starLayer(uv + drift * 0.2, 90.0, 51.0, 3.0) * 0.55;
+  stars += starLayer(uv + drift * 0.15, 160.0, 77.0, 4.0) * 0.35 * (0.4 + band);
+  col += vec3(0.85, 0.9, 1.0) * stars;
+
+  // vignette
+  float v = smoothstep(1.25, 0.25, length(uv * vec2(0.85, 1.0)));
+  col *= mix(0.45, 1.0, v);
+  col = 1.0 - exp(-col * 1.35);
+  gl_FragColor = vec4(col + grain(gl_FragCoord.xy), 1.0);
+}`;
+
+      // ---------------------------------------------------------------- light tunnel (journey CTA)
+      const TUNNEL = COMMON + `
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+  float ang = TAU * uT;
+  uv += vec2(cos(ang), sin(ang)) * 0.015;
+  float r = length(uv);
+  float a = atan(uv.y, uv.x);
+  float depth = 0.35 / max(r, 0.001);
+
+  // tunnel walls: fbm wrapped onto the cylinder, scrolling one full period per loop
+  vec2 cyl = vec2(cos(a), sin(a)) * 1.4;
+  float z = depth * 1.0 + uT * 3.0;
+  float n = fbm(cyl + 2.0, z, 3.0);
+  float wisps = smoothstep(0.35, 0.95, n);
+
+  // light streaks rushing past
+  float seg = floor((a / TAU + 0.5) * 90.0);
+  float h = hash2(vec2(seg, 3.0));
+  float streakPos = fract(h * 5.0 - uT * 2.0);
+  float sp = fract(depth * 0.25 + streakPos);
+  float streak = smoothstep(0.0, 0.25, sp) * smoothstep(0.55, 0.25, sp) * step(0.9, h);
+  float edge = abs(fract((a / TAU + 0.5) * 90.0) - 0.5);
+  streak *= smoothstep(0.09, 0.0, edge);
+
+  vec3 navy = vec3(0.02, 0.03, 0.09);
+  vec3 blue = vec3(0.10, 0.22, 0.73);
+  vec3 gold = vec3(0.86, 0.74, 0.52);
+  vec3 white = vec3(1.0, 0.97, 0.9);
+
+  float glow = exp(-r * 3.2);
+  float core = exp(-r * 11.0);
+  vec3 wall = mix(blue, gold, smoothstep(0.05, 0.6, glow));
+  vec3 col = navy;
+  col += wall * wisps * smoothstep(0.02, 0.35, r) * (0.55 + 1.4 * glow);
+  col += gold * glow * 0.55;
+  col += white * core * (0.95 + 0.05 * sin(TAU * 2.0 * uT));
+  col += mix(blue * 1.6, white, glow) * streak * 0.32 * smoothstep(0.05, 0.4, r);
+
+  // drifting motes
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    vec2 g = uv * (8.0 + fi * 5.0);
+    vec2 id = floor(g);
+    vec2 hh = hash22(id + fi * 7.0);
+    if (hh.x > 0.9) {
+      vec2 o = (hash22(id + 2.0 + fi) - 0.5) * 0.6;
+      float tw = 0.5 + 0.5 * sin(TAU * (uT * (1.0 + fi) + hh.y * 6.0));
+      col += gold * smoothstep(0.06, 0.0, length(fract(g) - 0.5 - o)) * tw * 0.45;
+    }
+  }
+  float v = smoothstep(1.3, 0.2, length(uv * vec2(0.8, 1.0)));
+  col *= mix(0.35, 1.0, v);
+  col = 1.0 - exp(-col * 1.25);
+  gl_FragColor = vec4(col + grain(gl_FragCoord.xy), 1.0);
+}`;
+
+      // ---------------------------------------------------------------- rising light (quote / impact)
+      const ASCENT = COMMON + `
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+  vec3 col = mix(vec3(0.01, 0.015, 0.045), vec3(0.03, 0.05, 0.16), smoothstep(-0.6, 0.6, uv.y));
+
+  // aurora curtains: vertical streaks bent by looping noise
+  float z = uT * 3.0;
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    float bend = fbm(vec2(uv.y * 0.6 + fi * 2.0, fi * 4.0), z + fi, 3.0) - 0.5;
+    float x = uv.x * (1.4 + fi * 0.5) + bend * 1.6 + fi * 0.37;
+    float rays = fbm(vec2(x * 4.0, fi * 9.0 + 1.0), z * 1.0 + fi * 0.7, 3.0);
+    float curtain = pow(smoothstep(0.42, 0.92, rays), 2.0);
+    float height = smoothstep(-0.65, 0.25, uv.y) * smoothstep(0.7, 0.0, uv.y);
+    vec3 tint = mix(vec3(0.12, 0.62, 0.86), vec3(0.18, 0.28, 0.85), fi / 2.0);
+    col += tint * curtain * height * (0.5 - fi * 0.1);
+  }
+
+  // motes rising and swaying, each column on its own integer-speed cycle
+  for (int i = 0; i < 3; i++) {
+    float fi = float(i);
+    float scale = 7.0 + fi * 6.0;
+    vec2 g = uv * scale;
+    float colId = floor(g.x);
+    float speed = 1.0 + floor(hash2(vec2(colId, fi)) * 2.0);
+    g.y -= uT * scale * 1.2 * speed / 1.0;
+    g.y = mod(g.y, scale * 1.2);
+    vec2 id = floor(g);
+    vec2 hh = hash22(id + fi * 31.0);
+    if (hh.x > 0.78) {
+      vec2 o = (hash22(id + 9.0 + fi) - 0.5) * 0.5;
+      o.x += 0.15 * sin(TAU * (uT * 2.0 + hh.y * 3.0));
+      float d = length(fract(g) - 0.5 - o);
+      float tw = 0.55 + 0.45 * sin(TAU * (uT * 3.0 + hh.y * 5.0));
+      vec3 c = mix(vec3(0.86, 0.74, 0.52), vec3(0.75, 0.88, 1.0), step(0.9, hh.y));
+      col += c * smoothstep(0.09 - fi * 0.02, 0.0, d) * tw * (0.6 - fi * 0.12);
+    }
+  }
+  // warm horizon glow at the bottom
+  col += vec3(0.71, 0.62, 0.47) * exp(-pow((uv.y + 0.62) * 3.0, 2.0)) * 0.22;
+  float v = smoothstep(1.3, 0.3, length(uv * vec2(0.75, 1.0)));
+  col *= mix(0.5, 1.0, v);
+  col = 1.0 - exp(-col * 1.3);
+  gl_FragColor = vec4(col + grain(gl_FragCoord.xy), 1.0);
+}`;
+
+      const SHADERS = { nebula: NEBULA, tunnel: TUNNEL, ascent: ASCENT };
+      const VERT = "attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }";
+
+      window.setup = (name, width, height) => {
+        const canvas = document.getElementById("c");
+        canvas.width = width;
+        canvas.height = height;
+        const gl = canvas.getContext("webgl", { preserveDrawingBuffer: true, antialias: false });
+        if (!gl) throw new Error("WebGL unavailable");
+        const compile = (type, src) => {
+          const s = gl.createShader(type);
+          gl.shaderSource(s, src);
+          gl.compileShader(s);
+          if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+          return s;
+        };
+        const prog = gl.createProgram();
+        gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+        gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, SHADERS[name]));
+        gl.linkProgram(prog);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+        gl.useProgram(prog);
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+        const loc = gl.getAttribLocation(prog, "p");
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+        gl.uniform2f(gl.getUniformLocation(prog, "uRes"), width, height);
+        const uT = gl.getUniformLocation(prog, "uT");
+        const uSeed = gl.getUniformLocation(prog, "uSeed");
+        const pixels = new Uint8Array(width * height * 4);
+
+        window.renderFrame = (phase, seed) => {
+          gl.uniform1f(uT, phase);
+          gl.uniform1f(uSeed, seed);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+          gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+          // base64 is the cheapest way across the CDP boundary
+          let bin = "";
+          const CH = 0x8000;
+          for (let i = 0; i < pixels.length; i += CH) bin += String.fromCharCode.apply(null, pixels.subarray(i, i + CH));
+          return btoa(bin);
+        };
+        return gl.getParameter(gl.VERSION) + " / " + (gl.getExtension("WEBGL_debug_renderer_info") ? gl.getParameter(gl.getExtension("WEBGL_debug_renderer_info").UNMASKED_RENDERER_WEBGL) : "?");
+      };
+    </script>
+  </body>
+</html>
