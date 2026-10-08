@@ -25,7 +25,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     subtitle: "Compelling Evidence That Life Does Not End at Death",
     primaryCta: "Read an Excerpt",
     secondaryCta: "Buy the Book",
-    booksImage: "/books/books-hardcover.webp",
+    booksImage: "/books/books-fan.webp",
     backgroundImage: "media:view-universe-space-shot-milky-way-galaxy-scaled.webp",
     backgroundVideo: "/videos/nebula-drift.mp4",
   },
@@ -38,9 +38,9 @@ export const DEFAULT_CONTENT: SiteContent = {
       "Explores the concept of multiphasic life",
       "Blends science, spirituality, and philosophy",
     ],
-    image: "/books/books-fan.webp",
+    image: "/books/books-hardcover.webp",
     ctaLabel: "Know About Author",
-    // a flat image of the front cover (optional) — when set, the 3D book wears it
+    // a flat image of the front cover (optional) — when set, the 3D books wear it
     cover: "/books/cover.webp",
   },
   marquee: {

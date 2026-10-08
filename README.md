@@ -3,7 +3,7 @@
 The website for *Postmortem Life Continuation* by Dr. Wilson Antoine, MD, rebuilt from the WordPress
 site at wilsonantoine.com, plus a private sales dashboard at `/admin`.
 
-React 19 + TypeScript + Vite + Tailwind CSS v4, GSAP (ScrollTrigger + SplitText) and Lenis smooth scrolling.
+React 19 + TypeScript + Vite + Tailwind CSS v4, GSAP (ScrollTrigger) and Lenis smooth scrolling.
 
 ```bash
 npm install
@@ -19,24 +19,29 @@ npm run preview
 
 ## The website
 
-A classic, calm author site: warm parchment pages, his original navy (`#2A3663`) and gold (`#B59F78`),
-Playfair Display headings and EB Garamond text, with the real book images throughout.
+A classic author-site layout in his original colours: deep space navy (`#0A1015` / `#2A3663`), royal
+blue (`#1836A5` / `#3354D2`), gold (`#B59F78`) and a touch of the logo's cyan (`#2AC4EA`). Playfair Display
+headings, Jost text, his WA quill logo and the real book images throughout.
 
 | Section | What it shows |
 |---|---|
-| **Header** | “WILSON ANTOINE” wordmark with a quill, *Medical Doctor • Author* under it, letter-spaced links, an Admin pill. |
-| **Hero** | Tagline pill, the book title, “by Dr. Wilson Antoine — Medical Doctor · Author”, the subtitle, availability chips, **Buy on Amazon** + **Read an Excerpt**; on the right the book spread with a *Featured Book* badge and a details card. |
-| **About the book** | Panel with the hardcover image, description, highlights, a details table and a buy button. |
-| **Inside the book** | The featured chapters as a table of contents (I–V) with every summary visible. |
-| **What this book explores** | The six themes in a bordered grid. |
-| **The premise** | One quote on navy with the slow light video behind it. |
-| **The author** | Panel with portrait, bio and highlights. |
-| **Reviews · FAQ** | Reader cards; common questions (editable in Dashboard → Website → FAQ). |
-| **Begin the journey** | Navy panel with the book, one row per store/format, and share links. |
-| **Footer** | Wordmark, links, newsletter sign-up. |
+| **Header** | A slim announcement line (tucks away on scroll), the WA quill logo, letter-spaced links with a gold underline for the section you're in, an Admin pill and *Get the Book*. A gold line along the bottom fills as you read. |
+| **Hero** | Galaxy photo, the nebula video loop and live twinkling stars. Tag, the title word by word (*Continuation* in shimmering gold), subtitle, byline, availability chips, **Buy the Book** + **Read an Excerpt**, a reader quote. On the right the five-book spread inside slowly turning orbit rings, *Featured Book* badge, floating rating/themes badges and a details card. The spread tilts toward the cursor; the sky drifts as you scroll. |
+| **At a glance** | Glass strip — years of practice, chapters, themes, reader rating — counting up as it arrives. |
+| **I. About the book** | Glass panel with gold corner brackets: the hardcover floating in a ringed halo, drop-cap description, highlights, details table, buy + “Know About Author”. |
+| **Themes ribbon** | His six themes scrolling past in gold italic. |
+| **II. Inside the book** | Chapters I–V as a lit table of contents: a gold thread draws down the list as you read, each numeral glows as it passes the middle of the screen. Beside it (desktop) a 3D book made from the flat cover — spine, pages and shadow — that follows the cursor and stays pinned while you read. |
+| **III. What this book explores** | The Earth backdrop, six numbered glass cards flying in from both sides around the tilted book. |
+| **The premise** | Full-screen quote over the rising-light video; the words light up one by one as you scroll. |
+| **IV. Why this book matters** | The front-and-back pair with an offset gold frame; Comfort, Clarity, Reassurance. |
+| **V. The author** | Portrait revealed like a curtain with a gold offset frame, bio, highlights counting up, his name signed in italic. |
+| **VI. Reviews** | Average rating, glass reader cards that rise in. |
+| **VII. FAQ** | Numbered questions in a gold-edged accordion; a “Still curious?” card. |
+| **Begin the journey** | The light-tunnel video, the 3D book, one row per store/format, share links. |
+| **Footer** | His original footer, refined: centred logo, newsletter pill, links, gold social circles, a faint giant wordmark. |
 
-Motion is deliberately quiet: gentle fade-ups, the book floating slightly, smooth scrolling. Phones get
-a sticky Buy bar; everything respects `prefers-reduced-motion`.
+Section numbers (I, II, III…) follow whichever sections are switched on. Phones get a sticky Buy pill;
+with `prefers-reduced-motion` every animation is skipped and videos show their still frame.
 
 ### Background videos
 
@@ -68,6 +73,9 @@ The starting passcode was shared privately (it isn't written in this repo). Chan
 (A changed passcode is saved in that browser; other devices keep using the starting one until changed there
 too. To change the starting passcode for everyone, update `passHash` in `src/data/stores.ts` — it's
 `sha256("wa-default-v1:" + passcode)`.)
+
+The dashboard wears the same brand: his logo and the book's cover on the lock screen and in the
+sidebar, and a *Your book* banner on the overview with lifetime copies, earnings, buy clicks and readers.
 
 Pages:
 
@@ -112,7 +120,7 @@ copy of the site content would come with it.
 
 ## Content to review before launch
 
-- **Theme card one-liners** under “What this book explores” are new copy, written from the site's
+- **Theme card one-liners** under “What this book explores”, the chapters intro line and the FAQ are new copy, written from the site's
   existing wording — check they read right to Dr. Antoine.
 - The **quote** section line is adapted from the “Why this book matters” paragraph.
 - **Excerpt** is empty — paste a passage in Dashboard → Website → Excerpt to turn on the reader.
@@ -124,7 +132,7 @@ copy of the site content would come with it.
 
 ```
 src/
-  site/        Site.tsx (page + Lenis), sections/, components/ (Starfield, Book3D, BgVideo, RevealText…)
+  site/        Site.tsx (page + Lenis), sections/, components/ (Header, Stars, Book3D, BgVideo, SectionHead…)
   admin/       Admin.tsx (lock + shell), views/, charts.tsx, components.tsx, ui.tsx
   data/        types, defaultContent (all site copy), stores, demo data, constants
   lib/         gsap, store, metrics (all dashboard maths), media, format, csv, analytics, passcode

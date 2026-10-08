@@ -30,7 +30,7 @@ const TABS: { key: TabKey; label: string; section?: SectionKey }[] = [
 ];
 
 const SECTION_LABELS: Record<SectionKey, string> = {
-  announcement: "Announcement pill (hero)",
+  announcement: "Announcement bar (top of page)",
   book: "About the book",
   marquee: "Themes ribbon",
   explores: "What this book explores",
@@ -133,7 +133,7 @@ export default function Website() {
           {sectionToggle}
           <Card className="p-5 md:p-7">
             <div className="mb-6 flex items-center justify-between gap-3">
-              <h2 className="font-display text-lg font-semibold text-white">{current.label}</h2>
+              <h2 className="font-heading text-[1.35rem] font-medium text-white">{current.label}</h2>
               {resetKey && (
                 <Button size="sm" variant="ghost" onClick={() => resetSection(resetKey, current.label)}>
                   <RotateCcw className="h-3.5 w-3.5" /> Restore original
@@ -152,7 +152,7 @@ export default function Website() {
                       <Toggle key={k} checked={draft.sections[k]} onChange={(v) => patch("sections", { [k]: v })} label={SECTION_LABELS[k]} />
                     ))}
                   </Group>
-                  <Group title="Announcement pill" hint="The small banner above the books in the hero.">
+                  <Group title="Announcement bar" hint="The slim line above the menu at the top of the page. It tucks away once visitors scroll.">
                     <Text label="Message" value={draft.announcement.text} onChange={(v) => patch("announcement", { text: v })} />
                     <div className="grid gap-4 sm:grid-cols-2">
                       <Text label="Button label" value={draft.announcement.linkLabel} onChange={(v) => patch("announcement", { linkLabel: v })} />
@@ -169,12 +169,12 @@ export default function Website() {
                 <>
                   <Text label="Title" value={draft.hero.title} onChange={(v) => patch("hero", { title: v })} />
                   <Text label="Subtitle" value={draft.hero.subtitle} onChange={(v) => patch("hero", { subtitle: v })} />
-                  <Text label="Byline (small italic line)" value={draft.hero.eyebrow} onChange={(v) => patch("hero", { eyebrow: v })} hint="Leave empty to hide." />
+                  <Text label="Gold tag above the title" value={draft.hero.eyebrow} onChange={(v) => patch("hero", { eyebrow: v })} hint="Leave empty to hide." />
                   <div className="grid gap-4 sm:grid-cols-2">
                     <Text label="Outline button" value={draft.hero.primaryCta} onChange={(v) => patch("hero", { primaryCta: v })} hint="Opens the excerpt, or scrolls to chapters." />
                     <Text label="Gold button" value={draft.hero.secondaryCta} onChange={(v) => patch("hero", { secondaryCta: v })} hint="Goes to the main buy link." />
                   </div>
-                  <ImageInput label="Books image" value={draft.hero.booksImage} original={DEFAULT_CONTENT.hero.booksImage} onChange={(v) => patch("hero", { booksImage: v })} />
+                  <ImageInput label="Featured books image" value={draft.hero.booksImage} original={DEFAULT_CONTENT.hero.booksImage} onChange={(v) => patch("hero", { booksImage: v })} />
                   <ImageInput label="Background photo" value={draft.hero.backgroundImage} original={DEFAULT_CONTENT.hero.backgroundImage} onChange={(v) => patch("hero", { backgroundImage: v })} />
                   <VideoInput label="Background video (loops over the photo)" value={draft.hero.backgroundVideo} original={DEFAULT_CONTENT.hero.backgroundVideo} onChange={(v) => patch("hero", { backgroundVideo: v })} />
                 </>
@@ -193,7 +193,7 @@ export default function Website() {
                   <Text label="Button label" value={draft.book.ctaLabel} onChange={(v) => patch("book", { ctaLabel: v })} />
                   <ImageInput label="Image" value={draft.book.image} original={DEFAULT_CONTENT.book.image} onChange={(v) => patch("book", { image: v })} />
                   <ImageInput label="Flat front cover (optional)" value={draft.book.cover} original={DEFAULT_CONTENT.book.cover} onChange={(v) => patch("book", { cover: v })} />
-                  <p className="-mt-3 text-xs text-haze">A straight-on image of just the front cover (no mockup). When set, the 3D book on the site shows it; when empty, the cover is drawn to match.</p>
+                  <p className="-mt-3 text-xs text-haze">A straight-on image of just the front cover (no mockup). When set, the 3D books beside the chapters and in the closing section wear it; when empty, a cover is drawn to match.</p>
                 </>
               )}
 
@@ -264,7 +264,6 @@ export default function Website() {
                     <Text label="Small heading" value={draft.chapters.eyebrow} onChange={(v) => patch("chapters", { eyebrow: v })} />
                     <Text label="Heading" value={draft.chapters.heading} onChange={(v) => patch("chapters", { heading: v })} />
                   </div>
-                  <ImageInput label="Image" value={draft.chapters.image} original={DEFAULT_CONTENT.chapters.image} onChange={(v) => patch("chapters", { image: v })} />
                   <Group title="Chapters">
                     <ItemList
                       items={draft.chapters.items}

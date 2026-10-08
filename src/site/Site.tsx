@@ -11,13 +11,16 @@ import MobileBuyBar from "./components/MobileBuyBar";
 import Author from "./sections/Author";
 import Begin from "./sections/Begin";
 import Explores from "./sections/Explores";
+import Facts from "./sections/Facts";
 import Faq from "./sections/Faq";
 import Footer from "./sections/Footer";
 import Hero from "./sections/Hero";
+import Impact from "./sections/Impact";
 import Inside from "./sections/Inside";
 import Quote from "./sections/Quote";
 import Reviews from "./sections/Reviews";
 import TheBook from "./sections/TheBook";
+import Ticker from "./components/Ticker";
 import { primaryRetailer } from "./buy";
 import { scrollToTarget, setLenis } from "./smooth";
 
@@ -86,32 +89,60 @@ export default function Site() {
   const authorName = `${content.author.name}${/\bMD\b/.test(content.author.name) ? "" : ", MD"}`;
   const wordmark = content.author.name.replace(/^Dr\.?\s+/i, "");
   const credentials = content.author.credentials.replace(/\s*·\s*/g, " • ");
+  const hasAnnouncement = show.announcement && content.announcement.text.trim().length > 0;
+  const cover = content.book.cover;
+
+  // sections that carry a heading are numbered I, II, III… in the order they appear
+  const order = [
+    show.book && "book",
+    show.chapters && "chapters",
+    show.explores && "explores",
+    show.impact && content.impact.pillars.length > 0 && "impact",
+    show.author && "author",
+    show.reviews && content.reviews.items.some((r) => r.quote.trim()) && "reviews",
+    show.faq && content.faq.items.some((f) => f.q.trim()) && "faq",
+  ].filter(Boolean) as string[];
+  const num = (key: string) => order.indexOf(key) + 1 || undefined;
 
   return (
     <div className="site relative">
-      <Header nav={nav} name={wordmark} credentials={credentials} />
+      <Header nav={nav} name={content.brand.name || wordmark} logo={content.brand.logo} announcement={hasAnnouncement ? content.announcement : undefined} retailer={retailer} />
       <main id="main">
-        <Hero content={content} retailer={retailer} onExcerpt={openExcerpt} />
+        <Hero content={content} retailer={retailer} onExcerpt={openExcerpt} topOffset={hasAnnouncement ? 116 : 80} />
+        <Facts content={content} />
         {show.book && (
           <TheBook
+            n={num("book")}
             book={content.book}
             title={content.hero.title}
             author={authorName}
             formats={[...new Set(content.buy.retailers.filter((r) => r.url).map((r) => r.format))]}
             chapterCount={content.chapters.items.length}
-            heroImage={content.hero.booksImage}
             retailer={retailer}
           />
         )}
-        {show.chapters && <Inside chapters={content.chapters} retailer={retailer} hasExcerpt={hasExcerpt} onExcerpt={openExcerpt} />}
-        {show.explores && <Explores explores={content.explores} />}
-        {show.manifesto && content.manifesto.quote && <Quote manifesto={content.manifesto} />}
-        {show.author && <Author author={content.author} />}
-        {show.reviews && <Reviews reviews={content.reviews} />}
-        {show.faq && <Faq faq={content.faq} />}
-        {show.buy && <Begin buy={content.buy} title={content.hero.title} author={authorName} image={content.impact.image} />}
+        {show.marquee && <Ticker items={content.marquee.items} />}
+        {show.chapters && (
+          <Inside
+            n={num("chapters")}
+            chapters={content.chapters}
+            cover={cover}
+            title={content.hero.title}
+            author={authorName}
+            retailer={retailer}
+            hasExcerpt={hasExcerpt}
+            onExcerpt={openExcerpt}
+          />
+        )}
+        {show.explores && <Explores n={num("explores")} explores={content.explores} />}
+        {show.manifesto && content.manifesto.quote && <Quote manifesto={content.manifesto} author={authorName} />}
+        {show.impact && content.impact.pillars.length > 0 && <Impact n={num("impact")} impact={content.impact} />}
+        {show.author && <Author n={num("author")} author={content.author} logo={content.brand.logo} />}
+        {show.reviews && <Reviews n={num("reviews")} reviews={content.reviews} />}
+        {show.faq && <Faq n={num("faq")} faq={content.faq} />}
+        {show.buy && <Begin buy={content.buy} title={content.hero.title} author={authorName} cover={cover} />}
       </main>
-      <Footer footer={content.footer} nav={nav} name={wordmark} credentials={credentials} />
+      <Footer footer={content.footer} nav={nav} name={content.brand.name || wordmark} credentials={credentials} logo={content.brand.logo} />
       <MobileBuyBar retailer={retailer} title={content.hero.title} />
       <BackToTop />
       <ExcerptModal open={excerptOpen} onClose={closeExcerpt} title={content.excerpt.title} body={content.excerpt.body} retailer={retailer} />

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import {
+  BookOpen,
   ExternalLink,
   Globe,
   KeyRound,
@@ -19,6 +20,7 @@ import { hashPasscode, isUnlocked, newSalt, setUnlocked } from "../lib/passcode"
 import { resolveMedia } from "../lib/media";
 import { clearDemoData, hasDemoData } from "../data/demo";
 import { contentStore, eventsStore, leadsStore, repsStore, salesStore, settingsStore, subscribersStore } from "../data/stores";
+import { primaryRetailer } from "../site/buy";
 import { AdminProvider } from "./context";
 import { Button, FeedbackProvider, Input, useFeedback } from "./ui";
 import Overview from "./views/Overview";
@@ -119,39 +121,59 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
   };
 
   const secondsLeft = waitUntil ? Math.ceil((waitUntil - Date.now()) / 1000) : 0;
+  const logo = resolveMedia(content.brand.logo);
+  const cover = resolveMedia(content.book.cover);
 
   return (
-    <div className="relative grid min-h-screen place-items-center overflow-hidden bg-void px-4">
-      <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_30%,rgba(24,54,165,0.35),transparent_70%)]" />
-      <form onSubmit={submit} className="relative w-full max-w-sm rounded-3xl border border-white/10 bg-[#0b1029]/90 p-8 shadow-2xl backdrop-blur">
-        <img src={resolveMedia(content.brand.logo)} alt={content.brand.name} className="mx-auto h-14 w-auto" onError={(e) => (e.currentTarget.style.display = "none")} />
-        <div className="mx-auto mt-6 grid h-12 w-12 place-items-center rounded-2xl bg-gold/15 text-gold">
-          <KeyRound className="h-6 w-6" />
+    <div className="relative grid min-h-screen overflow-hidden bg-[#070b1c] lg:grid-cols-[1.05fr_0.95fr]">
+      {/* the book, under starlight */}
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-[radial-gradient(70%_60%_at_50%_45%,#1a2c7a,#0b1233_60%,#070b1c)] p-12 lg:flex">
+        <div className="stars-bg pointer-events-none absolute inset-0" />
+        <img src={logo} alt={content.brand.name} className="relative h-12 w-auto self-start" onError={(e) => (e.currentTarget.style.display = "none")} />
+        <div className="relative mx-auto">
+          <div className="absolute top-1/2 left-1/2 aspect-square w-[190%] -translate-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(51,84,210,0.55),transparent)]" />
+          <span className="absolute top-1/2 left-1/2 aspect-square w-[175%] -translate-1/2 rounded-full border border-gold/20" />
+          <span className="absolute top-1/2 left-1/2 aspect-square w-[145%] -translate-1/2 rounded-full border border-dashed border-cyan/25 animate-spin-slow" />
+          {cover && <img src={cover} alt={content.hero.title} className="relative w-[min(260px,22vw)] -rotate-3 rounded-r-[4px] shadow-[0_40px_60px_-20px_rgba(0,0,0,0.9)] animate-float" />}
         </div>
-        <h1 className="mt-4 text-center font-display text-xl font-semibold text-white">{creating ? "Set up your dashboard" : "Welcome back"}</h1>
-        <p className="mt-2 text-center text-sm text-mist">
-          {creating ? "Choose a passcode to keep the sales dashboard private on this device." : "Enter your passcode to open the dashboard."}
-        </p>
-        <div className="mt-6 space-y-3">
-          <Input type="password" autoFocus autoComplete={creating ? "new-password" : "current-password"} placeholder="Passcode" value={pass} onChange={(e) => setPass(e.target.value)} aria-label="Passcode" disabled={!!waitUntil} />
-          {creating && <Input type="password" autoComplete="new-password" placeholder="Confirm passcode" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="Confirm passcode" />}
+        <div className="relative">
+          <p className="font-heading text-[2rem] leading-tight text-white italic">{content.hero.title}</p>
+          <p className="mt-2 text-sm tracking-[0.25em] text-gold uppercase">Sales &amp; website dashboard</p>
         </div>
-        {error && (
-          <p className="mt-3 text-sm text-red-300" role="alert">
-            {error}
-            {secondsLeft > 0 && ` (${secondsLeft}s)`}
+      </div>
+
+      <div className="relative grid place-items-center px-4 py-12">
+        <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_30%,rgba(24,54,165,0.3),transparent_70%)]" />
+        <form onSubmit={submit} className="relative w-full max-w-sm rounded-3xl border border-gold/20 bg-[#0b1029]/90 p-8 shadow-2xl backdrop-blur">
+          <img src={logo} alt={content.brand.name} className="mx-auto h-14 w-auto lg:hidden" onError={(e) => (e.currentTarget.style.display = "none")} />
+          <div className="mx-auto mt-6 grid h-12 w-12 place-items-center rounded-full border border-gold/40 bg-gold/10 text-gold lg:mt-0">
+            <KeyRound className="h-5 w-5" />
+          </div>
+          <h1 className="font-heading mt-4 text-center text-[1.75rem] font-medium text-white">{creating ? "Set up your dashboard" : `Welcome back${settings.ownerName ? `, ${settings.ownerName}` : ""}`}</h1>
+          <p className="mt-2 text-center text-sm text-mist">
+            {creating ? "Choose a passcode to keep the sales dashboard private on this device." : "Enter your passcode to open the dashboard."}
           </p>
-        )}
-        <Button type="submit" variant="primary" className="mt-6 w-full" disabled={busy || !!waitUntil}>
-          {creating ? "Create passcode & continue" : "Unlock"}
-        </Button>
-        <p className="mt-6 text-center text-xs leading-relaxed text-haze">
-          Records are saved in this browser until the dashboard is connected to a server. Export a backup from Settings anytime.
-        </p>
-        <a href="/" className="mt-4 block text-center text-xs text-mist hover:text-gold">
-          ← Back to the website
-        </a>
-      </form>
+          <div className="mt-6 space-y-3">
+            <Input type="password" autoFocus autoComplete={creating ? "new-password" : "current-password"} placeholder="Passcode" value={pass} onChange={(e) => setPass(e.target.value)} aria-label="Passcode" disabled={!!waitUntil} />
+            {creating && <Input type="password" autoComplete="new-password" placeholder="Confirm passcode" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="Confirm passcode" />}
+          </div>
+          {error && (
+            <p className="mt-3 text-sm text-red-300" role="alert">
+              {error}
+              {secondsLeft > 0 && ` (${secondsLeft}s)`}
+            </p>
+          )}
+          <Button type="submit" variant="primary" className="mt-6 w-full" disabled={busy || !!waitUntil}>
+            {creating ? "Create passcode & continue" : "Unlock"}
+          </Button>
+          <p className="mt-6 text-center text-xs leading-relaxed text-haze">
+            Records are saved in this browser until the dashboard is connected to a server. Export a backup from Settings anytime.
+          </p>
+          <a href="/" className="mt-4 block text-center text-xs text-mist hover:text-gold">
+            ← Back to the website
+          </a>
+        </form>
+      </div>
     </div>
   );
 }
@@ -169,6 +191,11 @@ function Shell({ onLock }: { onLock: () => void }) {
   useStore(subscribersStore);
   useStore(eventsStore);
   const demo = hasDemoData();
+  const content = useStore(contentStore);
+  const retailer = primaryRetailer(content.buy.retailers);
+  const logo = resolveMedia(content.brand.logo);
+  const cover = resolveMedia(content.book.cover);
+  const [logoOk, setLogoOk] = useState(!!logo);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -177,11 +204,14 @@ function Shell({ onLock }: { onLock: () => void }) {
 
   const sidebar = (
     <nav className="flex h-full flex-col gap-1 p-4" aria-label="Dashboard">
-      <a href="/" className="mb-6 flex items-center gap-3 px-2 pt-1" target="_blank" rel="noopener">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-gold-light to-gold-deep font-serif text-lg font-semibold text-void">WA</span>
-        <span>
-          <span className="block text-sm font-semibold text-star">Wilson Antoine</span>
-          <span className="block text-xs text-haze">Book sales dashboard</span>
+      <a href="/" className="mb-6 block px-2 pt-1" target="_blank" rel="noopener" aria-label={`${content.brand.name} — open the website`}>
+        {logoOk ? (
+          <img src={logo} alt={content.brand.name} onError={() => setLogoOk(false)} className="h-11 w-auto" />
+        ) : (
+          <span className="font-heading block text-lg text-star">{content.brand.name}</span>
+        )}
+        <span className="mt-2 flex items-center gap-2 text-[0.62rem] tracking-[0.25em] text-gold uppercase">
+          <span className="h-px w-5 bg-gold/60" /> Sales dashboard
         </span>
       </a>
       {NAV.map(({ to, label, icon: Icon, end }) => (
@@ -200,13 +230,33 @@ function Shell({ onLock }: { onLock: () => void }) {
           {label}
         </NavLink>
       ))}
-      <div className="mt-auto space-y-1 border-t border-white/[0.06] pt-4">
+      <div className="mt-auto">
+        <a
+          href={retailer?.url || "/"}
+          target="_blank"
+          rel="noopener"
+          className="group mb-3 flex items-center gap-3 rounded-xl border border-gold/20 bg-gradient-to-br from-[#1a2557] to-[#0b1029] p-3 transition hover:border-gold/45"
+        >
+          {cover ? (
+            <img src={cover} alt="" className="h-16 w-auto rounded-r-[3px] shadow-[0_8px_18px_-6px_rgba(0,0,0,0.8)] transition-transform duration-500 group-hover:-rotate-3" />
+          ) : (
+            <span className="grid h-16 w-12 place-items-center rounded-r-[3px] bg-[#1836a5] text-gold">
+              <BookOpen className="h-5 w-5" />
+            </span>
+          )}
+          <span className="min-w-0">
+            <span className="font-heading block text-[0.95rem] leading-snug text-star">{content.hero.title}</span>
+            <span className="mt-1 block truncate text-xs text-haze">{retailer ? `${retailer.format} · ${retailer.label}` : "Your book"}</span>
+          </span>
+        </a>
+      <div className="space-y-1 border-t border-white/[0.06] pt-4">
         <a href="/" target="_blank" rel="noopener" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[0.92rem] text-mist transition hover:bg-white/[0.05] hover:text-star">
           <ExternalLink className="h-[18px] w-[18px]" /> View website
         </a>
         <button onClick={onLock} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[0.92rem] text-mist transition hover:bg-white/[0.05] hover:text-star">
           <Lock className="h-[18px] w-[18px]" /> Lock dashboard
         </button>
+      </div>
       </div>
     </nav>
   );
@@ -218,8 +268,8 @@ function Shell({ onLock }: { onLock: () => void }) {
       {/* phone / tablet */}
       <div className="sticky top-0 z-30 flex items-center justify-between border-b border-white/[0.06] bg-[#080d22]/90 px-4 py-3 backdrop-blur lg:hidden">
         <span className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-gold-light to-gold-deep font-serif font-semibold text-void">WA</span>
-          <span className="text-sm font-semibold">Dashboard</span>
+          {logoOk ? <img src={logo} alt={content.brand.name} onError={() => setLogoOk(false)} className="h-8 w-auto" /> : <span className="font-heading text-base">{content.brand.name}</span>}
+          <span className="border-l border-white/15 pl-2.5 text-[0.62rem] tracking-[0.22em] text-gold uppercase">Dashboard</span>
         </span>
         <button onClick={() => setMenu(true)} aria-label="Open navigation" className="grid h-10 w-10 place-items-center rounded-lg text-mist hover:bg-white/5">
           <Menu className="h-5 w-5" />

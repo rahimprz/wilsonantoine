@@ -31,7 +31,7 @@ export default function BackToTop() {
     <button
       onClick={() => scrollToTarget(0)}
       aria-label="Back to top"
-      className={`fixed right-5 bottom-24 z-40 grid h-12 w-12 place-items-center rounded-full bg-ink-navy text-white shadow-xl transition-all duration-500 hover:-translate-y-1 md:right-7 md:bottom-7 ${show ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
+      className={`fixed right-5 bottom-24 z-40 grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-[#0a1015]/85 text-gold-light shadow-[0_10px_30px_-8px_rgba(0,0,0,0.8)] backdrop-blur transition-all duration-500 hover:-translate-y-1 md:right-7 md:bottom-7 ${show ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
     >
       <svg className="absolute inset-0 -rotate-90" viewBox="0 0 48 48" aria-hidden>
         <circle cx="24" cy="24" r="22" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="2" />

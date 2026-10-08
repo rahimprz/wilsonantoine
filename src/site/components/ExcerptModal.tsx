@@ -13,7 +13,7 @@ interface ExcerptModalProps {
   retailer?: Retailer;
 }
 
-/** A full-screen reading page on ivory paper for the excerpt pasted into the dashboard. */
+/** A full-screen reading page, deep navy under starlight, for the excerpt pasted into the dashboard. */
 export default function ExcerptModal({ open, onClose, title, body, retailer }: ExcerptModalProps) {
   const root = useRef<HTMLDivElement>(null);
   const [progress, setProgress] = useState(0);
@@ -39,13 +39,13 @@ export default function ExcerptModal({ open, onClose, title, body, retailer }: E
   const paragraphs = body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
   return (
-    <div ref={root} className="site fixed inset-0 z-[95] flex flex-col bg-parchment" role="dialog" aria-modal="true" aria-label={title || "Excerpt"}>
-      <div className="h-[2px] bg-ink-navy/10">
-        <div className="h-full bg-gold" style={{ width: `${progress * 100}%` }} />
+    <div ref={root} className="site stars-bg fixed inset-0 z-[95] flex flex-col !bg-[#0a1015]" role="dialog" aria-modal="true" aria-label={title || "Excerpt"}>
+      <div className="h-[2px] bg-white/10">
+        <div className="h-full bg-gradient-to-r from-gold-deep via-gold to-gold-light" style={{ width: `${progress * 100}%` }} />
       </div>
-      <div className="wrap flex h-16 shrink-0 items-center justify-between">
-        <p className="caps text-gold-deep">An excerpt</p>
-        <button data-close onClick={onClose} className="btn-line !py-2.5">
+      <div className="wrap flex h-16 shrink-0 items-center justify-between border-b border-white/10">
+        <p className="caps text-gold">An excerpt</p>
+        <button data-close onClick={onClose} className="btn-outline !py-2.5">
           Close
         </button>
       </div>
@@ -63,15 +63,15 @@ export default function ExcerptModal({ open, onClose, title, body, retailer }: E
               {title}
             </h2>
           )}
-          <div data-in className="space-y-7 font-[family-name:var(--font-heading)] text-[1.45rem] leading-[1.65] first-letter:float-left first-letter:mr-3 first-letter:text-[4.6rem] first-letter:leading-[0.85] first-letter:text-gold-deep">
+          <div data-in className="space-y-7 font-[family-name:var(--font-heading)] text-[1.45rem] leading-[1.65] first-letter:float-left first-letter:mr-3 first-letter:text-[4.6rem] first-letter:leading-[0.85] text-star/90 first-letter:text-gold">
             {paragraphs.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
           </div>
           {retailer && (
-            <div data-in className="mt-16 border-t border-navy/15 pt-10 text-center">
+            <div data-in className="mt-16 border-t border-white/10 pt-10 text-center">
               <p className="serif-head text-4xl italic">Continue the journey.</p>
-              <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-solid mt-6">
+              <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-gold mt-6">
                 Get the full book <ArrowUpRight className="h-4 w-4" />
               </a>
             </div>

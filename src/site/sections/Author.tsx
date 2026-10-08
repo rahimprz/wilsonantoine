@@ -1,73 +1,93 @@
 import { useRef } from "react";
+import { Stethoscope } from "lucide-react";
 import { gsap, MOTION_OK, useGSAP } from "../../lib/gsap";
+import { resolveMedia } from "../../lib/media";
 import type { SiteContent } from "../../data/types";
-import SideLabel from "../components/SideLabel";
+import SectionHead from "../components/SectionHead";
 import SmartImage from "../components/SmartImage";
 import { useReveal } from "../useReveal";
 
-export default function Author({ author }: { author: SiteContent["author"] }) {
+export default function Author({ n, author, logo }: { n?: number; author: SiteContent["author"]; logo: string }) {
   const root = useRef<HTMLElement>(null);
-  useReveal(root);
+  useReveal(root, [author.highlights.length]);
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
+        gsap.from("[data-portrait]", { clipPath: "inset(100% 0% 0% 0%)", duration: 1.8, ease: "expo.inOut", scrollTrigger: { trigger: "[data-portrait]", start: "top 80%", once: true } });
+        gsap.from("[data-offset]", { x: -30, y: -30, opacity: 0, duration: 1.6, delay: 0.5, ease: "expo.out", scrollTrigger: { trigger: "[data-portrait]", start: "top 80%", once: true } });
+        gsap.fromTo("[data-portrait-img]", { scale: 1.15, yPercent: -4 }, { scale: 1, yPercent: 4, ease: "none", scrollTrigger: { trigger: root.current, start: "top bottom", end: "bottom top", scrub: true } });
         gsap.utils.toArray<HTMLElement>("[data-count]").forEach((el) => {
           const target = Number(el.dataset.count);
           const suffix = el.dataset.suffix ?? "";
           const s = { v: 0 };
-          gsap.to(s, { v: target, duration: 1.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 90%", once: true }, onUpdate: () => void (el.textContent = `${Math.round(s.v)}${suffix}`) });
+          gsap.to(s, { v: target, duration: 2, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 92%", once: true }, onUpdate: () => void (el.textContent = `${Math.round(s.v)}${suffix}`) });
         });
       });
     },
     { scope: root },
   );
 
+  const logoUrl = resolveMedia(logo);
   return (
-    <section id="author" ref={root} className="py-20 md:py-28">
-      <div className="wrap">
-        <div className="panel relative grid items-center gap-12 px-6 py-12 md:px-14 md:py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:pl-24">
-          <SideLabel>The Author</SideLabel>
-          <div className="order-2 lg:order-1">
-            <p data-reveal className="caps text-[0.7rem] text-gold-deep">{author.eyebrow}</p>
-            <h2 data-reveal className="serif-head mt-3 text-[clamp(2.2rem,4vw,3.4rem)]">
-              {author.name}
-            </h2>
-            <p data-reveal className="mt-2 font-[family-name:var(--font-heading)] text-[1.2rem] text-gold-deep italic">
-              {author.credentials}
-            </p>
-            <div data-reveal className="rule-gold mt-6 w-24" />
-            <p data-reveal className="mt-6 text-[1.18rem] leading-relaxed">
-              {author.bio}
-            </p>
-            {author.highlights.length > 0 && (
-              <dl data-reveal className="mt-9 grid grid-cols-3 gap-3">
-                {author.highlights.map((h) => {
-                  const m = /^(\d+)(\+?)$/.exec(h.value.trim());
-                  return (
-                    <div key={h.id} className="rounded-[6px] border border-line bg-parchment px-3 py-5 text-center">
-                      <dd className="serif-head text-[2.2rem] leading-none text-ink-navy" data-count={m ? m[1] : undefined} data-suffix={m ? m[2] : undefined}>
-                        {h.value}
-                      </dd>
-                      <dt className="caps mt-2 text-[0.56rem] leading-relaxed text-muted">{h.label}</dt>
-                    </div>
-                  );
-                })}
-              </dl>
-            )}
-          </div>
-          <div data-reveal className="order-1 lg:order-2">
-            <div className="paper mx-auto w-full max-w-sm rounded-[6px] p-3">
+    <section id="author" ref={root} className="relative isolate overflow-hidden bg-[linear-gradient(180deg,#0a1130,#101a45_50%,#0a1130)] py-20 md:py-28">
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute top-[10%] left-[-10%] h-[520px] w-[520px] rounded-full bg-[radial-gradient(closest-side,rgba(51,84,210,0.35),transparent)] [animation:drift-a_18s_ease-in-out_infinite]" />
+        <div className="absolute right-[-8%] bottom-[5%] h-[460px] w-[460px] rounded-full bg-[radial-gradient(closest-side,rgba(181,159,120,0.16),transparent)] [animation:drift-b_22s_ease-in-out_infinite]" />
+      </div>
+      <div className="wrap grid items-center gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
+        <div className="relative mx-auto w-full max-w-[420px]">
+          <div data-offset aria-hidden className="absolute inset-0 translate-x-5 translate-y-5 rounded-[4px] border border-gold/50" />
+          <div data-portrait className="corners relative overflow-hidden rounded-[4px] bg-indigo shadow-[0_50px_80px_-40px_rgba(0,0,0,0.95)]">
+            <div data-portrait-img>
               <SmartImage
                 src={author.image}
                 alt={`Portrait of ${author.name}`}
                 loading="lazy"
-                className="aspect-[4/5] w-full rounded-[3px] object-cover"
-                fallback={<div className="grid aspect-[4/5] place-items-center rounded-[3px] bg-brand-navy font-[family-name:var(--font-heading)] text-7xl text-gold italic">WA</div>}
+                className="aspect-[4/5] w-full object-cover"
+                fallback={
+                  <div className="relative grid aspect-[4/5] place-items-center bg-[radial-gradient(80%_70%_at_50%_45%,#1a2c7a,#0a1130)] p-12">
+                    <span className="stars-bg pointer-events-none absolute inset-0" />
+                    {logoUrl ? <img src={logoUrl} alt="" className="relative w-full opacity-90" /> : <span className="font-[family-name:var(--font-heading)] text-7xl text-gold italic">WA</span>}
+                  </div>
+                }
               />
-              <p className="caps mt-3 text-center text-[0.6rem] text-muted">{author.name}</p>
+            </div>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0a1015]/95 via-[#0a1015]/60 to-transparent px-6 pt-16 pb-5">
+              <p className="serif-head text-[1.4rem]">{author.name}</p>
+              <p className="caps mt-1 inline-flex items-center gap-2 text-[0.56rem] text-gold-light">
+                <Stethoscope className="h-3.5 w-3.5" /> {author.credentials}
+              </p>
             </div>
           </div>
+        </div>
+
+        <div>
+          <SectionHead n={n} eyebrow={author.eyebrow} title={author.name} />
+          <p data-reveal className="mt-5 font-[family-name:var(--font-heading)] text-[1.3rem] text-gold-light italic">
+            {author.credentials}
+          </p>
+          <p data-reveal className="mt-6 text-[1.14rem] leading-relaxed text-mist">
+            {author.bio}
+          </p>
+          {author.highlights.length > 0 && (
+            <dl data-reveal className="mt-10 grid grid-cols-3 gap-3 md:gap-4">
+              {author.highlights.map((h) => {
+                const m = /^(\d+)(\+?)$/.exec(h.value.trim());
+                return (
+                  <div key={h.id} className="glass rounded-[4px] px-3 py-6 text-center">
+                    <dd className="serif-head gold-text text-[2.3rem] leading-none md:text-[2.7rem]" data-count={m ? m[1] : undefined} data-suffix={m ? m[2] : undefined}>
+                      {h.value}
+                    </dd>
+                    <dt className="caps mt-3 text-[0.52rem] leading-relaxed text-mist">{h.label}</dt>
+                  </div>
+                );
+              })}
+            </dl>
+          )}
+          <p data-reveal className="mt-10 font-[family-name:var(--font-heading)] text-[2rem] text-gold/80 italic">
+            — {author.name.replace(/^Dr\.?\s+/i, "")}
+          </p>
         </div>
       </div>
     </section>

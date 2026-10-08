@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, BookOpen, CalendarClock, MousePointerClick, Plus, Receipt, Sparkles, Table2, Target, UserPlus, LineChart } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BookOpen, PencilLine, CalendarClock, MousePointerClick, Plus, Receipt, Sparkles, Table2, Target, UserPlus, LineChart } from "lucide-react";
 import { useStore } from "../../lib/store";
 import { engagement, groupBy, inRange, monthPace, pipeline, repStats, series, totals, delta, grainFor } from "../../lib/metrics";
 import { fmtDay, greeting, num, pct, relativeDays } from "../../lib/format";
-import { eventsStore, leadsStore, repsStore, salesStore, settingsStore, subscribersStore } from "../../data/stores";
+import { contentStore, eventsStore, leadsStore, repsStore, salesStore, settingsStore, subscribersStore } from "../../data/stores";
 import { loadDemoData } from "../../data/demo";
 import { STAGE_LABEL } from "../../data/constants";
+import { resolveMedia } from "../../lib/media";
+import { primaryRetailer } from "../../site/buy";
 import { useAdmin } from "../context";
 import { BarList, Progress, TrendChart, VIZ } from "../charts";
 import { Kpi, RangePicker, rangeLabel, SaleEditor } from "../components";
@@ -42,6 +44,7 @@ export default function Overview() {
 
   const spark = (key: "gross" | "net" | "units") => buckets.map((b) => b[key]);
   const empty = sales.length === 0;
+  const allTime = totals(sales);
 
   return (
     <div>
@@ -57,6 +60,8 @@ export default function Overview() {
           </>
         }
       />
+
+      <BookBanner copies={allTime.units} earnings={money(allTime.net)} clicks={eng.buy_click} readers={subscribers.length} />
 
       {empty && (
         <Card className="mb-6 overflow-hidden">
@@ -365,6 +370,62 @@ function Goal({ label, value, target, projected, format }: { label: string; valu
           <Badge tone={onTrack ? "good" : "warn"}>{onTrack ? "On track" : `${pct(Math.min(progress, 9.99))} reached`}</Badge>
         </p>
       )}
+    </div>
+  );
+}
+
+/** The book itself, front and centre: cover, where it sells, and its lifetime numbers. */
+function BookBanner({ copies, earnings, clicks, readers }: { copies: number; earnings: string; clicks: number; readers: number }) {
+  const content = useStore(contentStore);
+  const retailer = primaryRetailer(content.buy.retailers);
+  const cover = resolveMedia(content.book.cover);
+  const stats = [
+    { label: "Copies recorded", value: num(copies) },
+    { label: "Your earnings, all time", value: earnings },
+    { label: "Clicks to buy (period)", value: num(clicks) },
+    { label: "Newsletter readers", value: num(readers) },
+  ];
+  return (
+    <div className="relative mb-6 overflow-hidden rounded-2xl border border-gold/20 bg-[radial-gradient(90%_120%_at_10%_50%,#1a2c7a,#0e1430_55%,#0b1029)]">
+      <div className="stars-bg pointer-events-none absolute inset-0 opacity-70" />
+      <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[radial-gradient(closest-side,rgba(181,159,120,0.18),transparent)]" />
+      <div className="relative flex flex-col gap-6 p-5 md:flex-row md:items-center md:p-6">
+        <div className="flex items-center gap-5">
+          {cover ? (
+            <img src={cover} alt="" className="h-28 w-auto shrink-0 -rotate-2 rounded-r-[4px] shadow-[0_18px_30px_-12px_rgba(0,0,0,0.9)] md:h-32" />
+          ) : (
+            <span className="grid h-28 w-20 shrink-0 place-items-center rounded-r-[4px] bg-[#1836a5] text-gold">
+              <BookOpen className="h-7 w-7" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="text-[0.62rem] tracking-[0.25em] text-gold uppercase">Your book</p>
+            <p className="font-heading mt-1 text-[1.45rem] leading-tight text-white md:text-[1.6rem]">{content.hero.title}</p>
+            <p className="mt-1 text-sm text-mist">
+              by {content.author.name}
+              {retailer && ` · ${retailer.format} on ${retailer.label}`}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {retailer && (
+                <a href={retailer.url} target="_blank" rel="noopener" className="inline-flex items-center gap-1.5 rounded-full border border-gold/40 px-3 py-1.5 text-xs text-gold-light transition hover:bg-gold/10">
+                  {retailer.label} page <ArrowUpRight className="h-3.5 w-3.5" />
+                </a>
+              )}
+              <Link to="/admin/website" className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-xs text-mist transition hover:border-white/30 hover:text-star">
+                <PencilLine className="h-3.5 w-3.5" /> Edit website
+              </Link>
+            </div>
+          </div>
+        </div>
+        <dl className="grid flex-1 grid-cols-2 gap-px overflow-hidden rounded-xl border border-white/10 bg-white/10 md:ml-auto md:max-w-xl lg:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="bg-[#0b1029]/85 px-4 py-3">
+              <dt className="text-[0.7rem] text-haze">{s.label}</dt>
+              <dd className="font-heading mt-0.5 text-[1.35rem] text-star tabular-nums">{s.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
     </div>
   );
 }

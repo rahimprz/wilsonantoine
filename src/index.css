@@ -26,7 +26,7 @@
   --color-ink-soft: #3d4563;
   --color-muted: #767b92;
   --font-heading: "Playfair Display", Georgia, serif;
-  --font-book: "EB Garamond", Georgia, serif;
+  --font-book: "Jost", system-ui, sans-serif;
   --color-navy: #0b1638;
   --color-navy-2: #13235a;
   --color-cream: #fbf8f2;
@@ -179,18 +179,19 @@ html.lenis body {
 }
 
 /* ---------------------------------------------------------------- the public site
-   Classic author-site look: warm parchment, his original navy (#2A3663) and gold (#B59F78),
-   Playfair Display headings and EB Garamond text. */
+   Classic author-site structure in his original colours: deep space navy (#0A1015 / #2A3663),
+   royal blue (#1836A5 / #3354D2), gold (#B59F78) and a touch of cyan (#2AC4EA).
+   Playfair Display headings, Jost text (his original body face). */
 .site {
-  background: var(--color-parchment);
-  color: var(--color-ink-soft);
-  font-family: var(--font-book);
-  font-size: 19px;
-  line-height: 1.65;
+  background: var(--color-night);
+  color: var(--color-mist);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.7;
 }
 .site ::selection {
   background: var(--color-gold);
-  color: #fff;
+  color: var(--color-void);
 }
 
 @layer components {
@@ -201,100 +202,153 @@ html.lenis body {
     padding-inline: clamp(1.25rem, 4vw, 3rem);
   }
   .caps {
-    font-family: var(--font-book);
+    font-family: var(--font-body);
     font-weight: 600;
-    font-size: 0.74rem;
-    letter-spacing: 0.26em;
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
   }
   .serif-head {
     font-family: var(--font-heading);
     font-weight: 500;
     line-height: 1.08;
-    color: var(--color-ink-navy);
+    color: var(--color-star);
   }
-  .btn-solid,
-  .btn-line {
+  .gold-text {
+    background: linear-gradient(100deg, #e9d8b0 0%, #b59f78 40%, #fff1d2 50%, #b59f78 60%, #dccaa3 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: gold-shimmer 7s linear infinite;
+  }
+  .btn-gold,
+  .btn-outline {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.75rem;
-    padding: 1.05rem 1.8rem;
-    font-family: var(--font-book);
+    overflow: hidden;
+    isolation: isolate;
+    padding: 1.05rem 1.85rem;
+    font-family: var(--font-body);
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
     white-space: nowrap;
+    border-radius: 2px;
     transition:
-      background-color 0.3s ease,
-      color 0.3s ease,
-      border-color 0.3s ease,
-      box-shadow 0.3s ease,
-      transform 0.3s ease;
-  }
-  .btn-solid {
-    background: var(--color-ink-navy);
-    color: #fff;
-    box-shadow: 0 10px 24px -14px rgb(30 39 73 / 0.8);
-  }
-  .btn-solid:hover {
-    background: var(--color-brand-navy);
-    transform: translateY(-1px);
-  }
-  .btn-solid svg,
-  .btn-line svg {
-    transition: transform 0.3s ease;
-  }
-  .btn-solid:hover svg,
-  .btn-line:hover svg {
-    transform: translateX(3px);
-  }
-  .btn-line {
-    border: 1px solid rgb(30 39 73 / 0.45);
-    color: var(--color-ink-navy);
-  }
-  .btn-line:hover {
-    border-color: var(--color-ink-navy);
-    background: rgb(255 255 255 / 0.5);
+      color 0.35s ease,
+      border-color 0.35s ease,
+      background-color 0.35s ease,
+      box-shadow 0.35s ease,
+      transform 0.35s ease;
   }
   .btn-gold {
-    background: var(--color-gold);
-    color: #fff;
+    background: linear-gradient(135deg, #dccaa3, #b59f78 55%, #9a8460);
+    color: #0a1130;
+    box-shadow: 0 14px 30px -14px rgb(181 159 120 / 0.75);
   }
   .btn-gold:hover {
-    background: var(--color-gold-deep);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px -16px rgb(181 159 120 / 0.95);
+  }
+  /* light sweeping across on hover */
+  .btn-gold::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.55) 50%, transparent 70%);
+    transform: translateX(-130%);
+    transition: transform 0.9s var(--ease-out-expo);
+  }
+  .btn-gold:hover::after {
+    transform: translateX(130%);
+  }
+  .btn-outline {
+    border: 1px solid rgb(255 255 255 / 0.35);
+    color: #fff;
+  }
+  .btn-outline:hover {
+    border-color: var(--color-gold);
+    color: var(--color-gold-light);
+    background: rgb(181 159 120 / 0.08);
+  }
+  .btn-gold svg,
+  .btn-outline svg {
+    transition: transform 0.35s ease;
+  }
+  .btn-gold:hover svg,
+  .btn-outline:hover svg {
+    transform: translateX(4px);
   }
   .chip {
     display: inline-flex;
     align-items: center;
     gap: 0.55rem;
-    border: 1px solid var(--color-line);
-    background: rgb(255 255 255 / 0.45);
+    border: 1px solid rgb(255 255 255 / 0.12);
+    background: rgb(255 255 255 / 0.05);
+    backdrop-filter: blur(8px);
     border-radius: 3px;
-    padding: 0.45rem 0.85rem;
-    font-size: 0.92rem;
-    color: var(--color-ink-navy);
+    padding: 0.5rem 0.9rem;
+    font-size: 0.9rem;
+    color: var(--color-star);
   }
   .tag {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
-    border: 1px solid rgb(181 159 120 / 0.55);
+    border: 1px solid rgb(181 159 120 / 0.5);
+    background: rgb(181 159 120 / 0.08);
     border-radius: 999px;
-    padding: 0.45rem 1.1rem;
-    color: var(--color-gold-deep);
-    background: rgb(255 255 255 / 0.35);
+    padding: 0.5rem 1.15rem;
+    color: var(--color-gold-light);
   }
-  .panel {
-    background: var(--color-parchment-2);
-    border: 1px solid var(--color-line);
-    border-radius: 12px;
+  .glass {
+    background: linear-gradient(160deg, rgb(42 54 99 / 0.55), rgb(10 17 48 / 0.7));
+    border: 1px solid rgb(181 159 120 / 0.22);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
-  .paper {
-    background: #fcfaf6;
-    border: 1px solid var(--color-line);
-    box-shadow: 0 24px 50px -32px rgb(30 39 73 / 0.35);
+  /* gold corner brackets, top-left and bottom-right */
+  .corners {
+    position: relative;
+  }
+  .corners::before,
+  .corners::after {
+    content: "";
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    pointer-events: none;
+    border-color: var(--color-gold);
+    border-style: solid;
+    opacity: 0.85;
+  }
+  .corners::before {
+    top: -1px;
+    left: -1px;
+    border-width: 2px 0 0 2px;
+  }
+  .corners::after {
+    right: -1px;
+    bottom: -1px;
+    border-width: 0 2px 2px 0;
+  }
+  /* a fine field of stars for dark sections */
+  .stars-bg {
+    background-image:
+      radial-gradient(1px 1px at 12% 18%, rgb(255 255 255 / 0.55), transparent),
+      radial-gradient(1px 1px at 72% 12%, rgb(255 255 255 / 0.45), transparent),
+      radial-gradient(1.5px 1.5px at 38% 64%, rgb(220 202 163 / 0.6), transparent),
+      radial-gradient(1px 1px at 86% 72%, rgb(255 255 255 / 0.4), transparent),
+      radial-gradient(1px 1px at 22% 86%, rgb(255 255 255 / 0.35), transparent),
+      radial-gradient(1.5px 1.5px at 58% 34%, rgb(170 200 255 / 0.5), transparent),
+      radial-gradient(1px 1px at 92% 38%, rgb(255 255 255 / 0.4), transparent);
+    background-size: 420px 420px;
   }
   .rule-gold {
     height: 1px;
@@ -312,4 +366,12 @@ html.lenis body {
 @keyframes grow-x {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
+}
+
+@keyframes gold-shimmer {
+  from { background-position: 200% 50%; }
+  to { background-position: -200% 50%; }
+}
+@keyframes spin-rev {
+  to { transform: rotate(-360deg); }
 }
