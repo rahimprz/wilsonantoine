@@ -1,94 +1,66 @@
-import { useRef, useState } from "react";
-import { ArrowUpRight, BookOpen, ChevronDown } from "lucide-react";
-import { gsap, MOTION_OK, useGSAP } from "../../lib/gsap";
+import { useRef } from "react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { track } from "../../lib/analytics";
 import type { Retailer, SiteContent } from "../../data/types";
-import Book3D from "../components/Book3D";
 import SmartImage from "../components/SmartImage";
 import { onBuyClick } from "../buy";
 import { useReveal } from "../useReveal";
 
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+
 interface InsideProps {
   chapters: SiteContent["chapters"];
-  cover: string;
   retailer?: Retailer;
   hasExcerpt: boolean;
   onExcerpt: () => void;
 }
 
-/** A look inside: featured chapters as an accordion beside the open book. */
-export default function Inside({ chapters, cover, retailer, hasExcerpt, onExcerpt }: InsideProps) {
+/** The featured chapters set like a table of contents — every summary visible, nothing to click open. */
+export default function Inside({ chapters, retailer, hasExcerpt, onExcerpt }: InsideProps) {
   const root = useRef<HTMLElement>(null);
-  const [open, setOpen] = useState(0);
   useReveal(root, [chapters.items.length]);
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia();
-      mm.add(MOTION_OK, () => {
-        gsap.fromTo("[data-mock]", { rotate: -4, y: 40 }, { rotate: 3, y: -40, ease: "none", scrollTrigger: { trigger: root.current, scrub: true } });
-      });
-    },
-    { scope: root },
-  );
-
-  const toggle = (i: number) => {
-    setOpen((c) => (c === i ? -1 : i));
-    if (open !== i) track("chapter_open", chapters.items[i]?.title);
-  };
-
   return (
-    <section id="chapters" ref={root} className="on-dark relative overflow-hidden bg-navy py-24 text-white md:py-32">
-      <div className="pointer-events-none absolute -top-40 -right-40 h-[520px] w-[520px] rounded-full bg-gold/15 blur-[120px]" />
-      <div className="wrap grid items-center gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
-        <div className="relative mx-auto w-full max-w-md lg:sticky lg:top-28 lg:self-start">
-          <div data-mock>
-            <SmartImage
-              src={chapters.image}
-              alt="Inside Postmortem Life Continuation"
-              loading="lazy"
-              className="h-auto w-full rounded-2xl drop-shadow-[0_40px_50px_rgba(0,0,0,0.55)]"
-              fallback={<Book3D className="mx-auto w-[70%]" cover={cover} />}
-            />
+    <section id="chapters" ref={root} className="border-y border-line bg-parchment-2/60 py-20 md:py-28">
+      <div className="wrap grid gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+        <div className="lg:sticky lg:top-32 lg:self-start">
+          <p data-reveal className="caps text-[0.7rem] text-gold-deep">{chapters.eyebrow}</p>
+          <h2 data-reveal className="serif-head mt-3 text-[clamp(2.2rem,4vw,3.4rem)]">
+            {chapters.heading}
+          </h2>
+          <div data-reveal className="rule-gold mt-6 w-24" />
+          <div data-reveal className="mt-10">
+            <SmartImage src={chapters.image} alt="Postmortem Life Continuation" loading="lazy" className="mx-auto h-auto w-full max-w-sm drop-shadow-[0_30px_30px_rgba(30,39,73,0.3)]" />
           </div>
         </div>
 
         <div>
-          <p data-reveal className="kicker">{chapters.eyebrow}</p>
-          <h2 data-reveal className="title mt-4 text-[clamp(2.4rem,4.8vw,4rem)]">
-            {chapters.heading}
-          </h2>
-          <div className="mt-10 space-y-3">
-            {chapters.items.map((ch, i) => {
-              const isOpen = open === i;
-              return (
-                <div key={ch.id} data-reveal={i * 0.06} className={`rounded-2xl border transition-colors duration-500 ${isOpen ? "border-gold/50 bg-white/[0.06]" : "border-white/10 hover:border-white/25"}`}>
-                  <h3>
-                    <button onClick={() => toggle(i)} aria-expanded={isOpen} aria-controls={`ch-${ch.id}`} className="flex w-full items-center gap-5 px-5 py-5 text-left md:px-6">
-                      <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-semibold tabular-nums transition-colors ${isOpen ? "bg-gold text-navy" : "bg-white/10 text-white/70"}`}>
-                        {i + 1}
-                      </span>
-                      <span className="title flex-1 text-[clamp(1.35rem,2vw,1.7rem)]">{ch.title}</span>
-                      <ChevronDown className={`h-5 w-5 shrink-0 text-gold-light transition-transform duration-500 ${isOpen ? "rotate-180" : ""}`} />
-                    </button>
-                  </h3>
-                  <div id={`ch-${ch.id}`} role="region" className={`grid transition-[grid-template-rows] duration-500 ease-[var(--ease-out-expo)] ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
-                    <div className="overflow-hidden">
-                      <p className="px-5 pb-6 text-white/75 md:pr-10 md:pl-[5.25rem]">{ch.summary}</p>
-                    </div>
-                  </div>
+          <ol className="divide-y divide-line border-y border-line">
+            {chapters.items.map((ch, i) => (
+              <li
+                key={ch.id}
+                data-reveal={i * 0.05}
+                className="group grid grid-cols-[3.5rem_1fr] gap-4 py-8 md:grid-cols-[4.5rem_1fr]"
+                onMouseEnter={() => track("chapter_open", ch.title)}
+              >
+                <span className="font-[family-name:var(--font-heading)] text-[2rem] leading-none text-gold italic transition-transform duration-500 group-hover:-translate-y-0.5">
+                  {ROMAN[i] ?? i + 1}
+                </span>
+                <div>
+                  <h3 className="serif-head text-[1.55rem] md:text-[1.75rem]">{ch.title}</h3>
+                  <p className="mt-2 text-[1.08rem] leading-relaxed">{ch.summary}</p>
                 </div>
-              );
-            })}
-          </div>
-          <div data-reveal className="mt-10 flex flex-wrap gap-3">
+              </li>
+            ))}
+          </ol>
+          <div data-reveal className="mt-10 flex flex-wrap gap-4">
             {hasExcerpt && (
-              <button onClick={onExcerpt} className="btn-ghost-light">
-                <BookOpen className="h-4 w-4" /> Read an excerpt
+              <button onClick={onExcerpt} className="btn-line">
+                <BookOpen className="h-4 w-4" /> Read an Excerpt
               </button>
             )}
             {retailer && (
-              <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-buy">
-                Read the full book <ArrowUpRight className="h-4 w-4" />
+              <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-solid">
+                Read the Full Book <ArrowRight className="h-4 w-4" />
               </a>
             )}
           </div>

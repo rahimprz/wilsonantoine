@@ -39,13 +39,13 @@ export default function ExcerptModal({ open, onClose, title, body, retailer }: E
   const paragraphs = body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
 
   return (
-    <div ref={root} className="site paper-grain fixed inset-0 z-[95] flex flex-col bg-cream" role="dialog" aria-modal="true" aria-label={title || "Excerpt"}>
-      <div className="h-[2px] bg-navy/10">
+    <div ref={root} className="site fixed inset-0 z-[95] flex flex-col bg-parchment" role="dialog" aria-modal="true" aria-label={title || "Excerpt"}>
+      <div className="h-[2px] bg-ink-navy/10">
         <div className="h-full bg-gold" style={{ width: `${progress * 100}%` }} />
       </div>
       <div className="wrap flex h-16 shrink-0 items-center justify-between">
-        <p className="label text-slate">An excerpt</p>
-        <button data-close onClick={onClose} className="btn-ghost-dark !py-2 !text-[0.85rem]">
+        <p className="caps text-gold-deep">An excerpt</p>
+        <button data-close onClick={onClose} className="btn-line !py-2.5">
           Close
         </button>
       </div>
@@ -59,19 +59,19 @@ export default function ExcerptModal({ open, onClose, title, body, retailer }: E
       >
         <article className="mx-auto max-w-2xl px-6 pt-10 pb-24">
           {title && (
-            <h2 data-in className="display mb-12 text-[clamp(2.6rem,7vw,5rem)]">
+            <h2 data-in className="serif-head mb-12 text-[clamp(2.6rem,7vw,5rem)]">
               {title}
             </h2>
           )}
-          <div data-in className="space-y-7 font-editorial text-[1.45rem] leading-[1.65] first-letter:float-left first-letter:mr-3 first-letter:text-[4.6rem] first-letter:leading-[0.85] first-letter:text-gold-deep">
+          <div data-in className="space-y-7 font-[family-name:var(--font-heading)] text-[1.45rem] leading-[1.65] first-letter:float-left first-letter:mr-3 first-letter:text-[4.6rem] first-letter:leading-[0.85] first-letter:text-gold-deep">
             {paragraphs.map((p, i) => (
               <p key={i}>{p}</p>
             ))}
           </div>
           {retailer && (
             <div data-in className="mt-16 border-t border-navy/15 pt-10 text-center">
-              <p className="display text-4xl italic">Continue the journey.</p>
-              <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-buy mt-6">
+              <p className="serif-head text-4xl italic">Continue the journey.</p>
+              <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-solid mt-6">
                 Get the full book <ArrowUpRight className="h-4 w-4" />
               </a>
             </div>

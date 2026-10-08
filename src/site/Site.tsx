@@ -1,26 +1,23 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Lenis from "lenis";
 import { gsap, prefersReducedMotion, ScrollTrigger } from "../lib/gsap";
 import { track } from "../lib/analytics";
 import { useStore } from "../lib/store";
 import { contentStore } from "../data/stores";
+import BackToTop from "./components/BackToTop";
 import ExcerptModal from "./components/ExcerptModal";
 import Header, { type NavItem } from "./components/Header";
-import BackToTop from "./components/BackToTop";
 import MobileBuyBar from "./components/MobileBuyBar";
-import ThemeTicker from "./components/ThemeTicker";
-import AboutBook from "./sections/AboutBook";
 import Author from "./sections/Author";
-import Discover from "./sections/Discover";
+import Begin from "./sections/Begin";
+import Explores from "./sections/Explores";
 import Faq from "./sections/Faq";
-import Highlights from "./sections/Highlights";
 import Footer from "./sections/Footer";
-import ForWhom from "./sections/ForWhom";
-import GetCopy from "./sections/GetCopy";
 import Hero from "./sections/Hero";
 import Inside from "./sections/Inside";
-import Premise from "./sections/Premise";
+import Quote from "./sections/Quote";
 import Reviews from "./sections/Reviews";
+import TheBook from "./sections/TheBook";
 import { primaryRetailer } from "./buy";
 import { scrollToTarget, setLenis } from "./smooth";
 
@@ -30,12 +27,11 @@ export default function Site() {
   const retailer = primaryRetailer(content.buy.retailers);
   const hasExcerpt = content.excerpt.body.trim().length > 0;
   const [excerptOpen, setExcerptOpen] = useState(false);
-  const progress = useRef<HTMLDivElement>(null);
 
-  // smooth scrolling on GSAP's clock, so pinned scenes and Lenis never disagree
+  // gentle smooth scrolling, on GSAP's clock so scroll-triggered reveals stay in step
   useEffect(() => {
     if (prefersReducedMotion()) return;
-    const lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.95, touchMultiplier: 1.4 });
+    const lenis = new Lenis({ lerp: 0.1 });
     setLenis(lenis);
     lenis.on("scroll", ScrollTrigger.update);
     const tick = (time: number) => lenis.raf(time * 1000);
@@ -48,32 +44,11 @@ export default function Site() {
     };
   }, []);
 
-  // late images change heights; re-measure the pinned scenes when they arrive
   useEffect(() => {
     const refresh = () => ScrollTrigger.refresh();
     window.addEventListener("load", refresh);
     document.fonts?.ready.then(refresh);
-    let t: ReturnType<typeof setTimeout>;
-    const onImg = (e: Event) => {
-      if ((e.target as HTMLElement).tagName === "IMG") {
-        clearTimeout(t);
-        t = setTimeout(refresh, 250);
-      }
-    };
-    document.addEventListener("load", onImg, true);
-    const bar = ScrollTrigger.create({
-      start: 0,
-      end: "max",
-      onUpdate: (self) => {
-        if (progress.current) progress.current.style.transform = `scaleX(${self.progress})`;
-      },
-    });
-    return () => {
-      window.removeEventListener("load", refresh);
-      document.removeEventListener("load", onImg, true);
-      clearTimeout(t);
-      bar.kill();
-    };
+    return () => window.removeEventListener("load", refresh);
   }, []);
 
   useEffect(() => {
@@ -88,15 +63,16 @@ export default function Site() {
 
   const nav = useMemo<NavItem[]>(() => {
     const items: (NavItem | false)[] = [
+      { id: "home", label: "Home" },
       show.book && { id: "about-book", label: "The Book" },
       show.chapters && { id: "chapters", label: "Inside" },
-      show.author && { id: "author", label: "The Author" },
+      show.author && { id: "author", label: "Author" },
       show.reviews && content.reviews.items.length > 0 && { id: "reviews", label: "Reviews" },
       show.faq && content.faq.items.length > 0 && { id: "faq", label: "FAQ" },
-      show.buy && { id: "buy", label: "Get the Book" },
+      { id: "contact", label: "Contact" },
     ];
     return items.filter(Boolean) as NavItem[];
-  }, [show.book, show.author, show.chapters, show.reviews, show.buy, show.faq, content.reviews.items.length, content.faq.items.length]);
+  }, [show.book, show.chapters, show.author, show.reviews, show.faq, content.reviews.items.length, content.faq.items.length]);
 
   const openExcerpt = useCallback(() => {
     if (hasExcerpt) {
@@ -107,44 +83,35 @@ export default function Site() {
   }, [hasExcerpt, show.chapters, show.book]);
   const closeExcerpt = useCallback(() => setExcerptOpen(false), []);
 
-  const cover = content.book.cover;
   const authorName = `${content.author.name}${/\bMD\b/.test(content.author.name) ? "" : ", MD"}`;
+  const wordmark = content.author.name.replace(/^Dr\.?\s+/i, "");
+  const credentials = content.author.credentials.replace(/\s*·\s*/g, " • ");
 
   return (
     <div className="site relative">
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px]">
-        <div ref={progress} className="h-full origin-left scale-x-0 bg-gold" />
-      </div>
-      <Header nav={nav} retailer={retailer} logo={content.brand.logo} brand={content.brand.name} />
-
+      <Header nav={nav} name={wordmark} credentials={credentials} />
       <main id="main">
-        <Hero content={content} retailer={retailer} onExcerpt={openExcerpt} showAnnouncement={show.announcement} />
-        <Highlights content={content} retailer={retailer} />
+        <Hero content={content} retailer={retailer} onExcerpt={openExcerpt} />
         {show.book && (
-          <AboutBook
+          <TheBook
             book={content.book}
-            booksImage={content.book.image}
             title={content.hero.title}
-            subtitle={content.hero.subtitle}
             author={authorName}
             formats={[...new Set(content.buy.retailers.filter((r) => r.url).map((r) => r.format))]}
             chapterCount={content.chapters.items.length}
+            heroImage={content.hero.booksImage}
             retailer={retailer}
           />
         )}
-        {show.explores && <Discover explores={content.explores} />}
-        {show.marquee && <ThemeTicker items={content.marquee.items} />}
-        {show.chapters && <Inside chapters={content.chapters} cover={cover} retailer={retailer} hasExcerpt={hasExcerpt} onExcerpt={openExcerpt} />}
+        {show.chapters && <Inside chapters={content.chapters} retailer={retailer} hasExcerpt={hasExcerpt} onExcerpt={openExcerpt} />}
+        {show.explores && <Explores explores={content.explores} />}
+        {show.manifesto && content.manifesto.quote && <Quote manifesto={content.manifesto} />}
         {show.author && <Author author={content.author} />}
-        {show.impact && <ForWhom impact={content.impact} />}
-        {show.manifesto && content.manifesto.quote && <Premise manifesto={content.manifesto} />}
         {show.reviews && <Reviews reviews={content.reviews} />}
         {show.faq && <Faq faq={content.faq} />}
-        {show.buy && <GetCopy buy={content.buy} title={content.hero.title} author={authorName} cover={cover} />}
+        {show.buy && <Begin buy={content.buy} title={content.hero.title} author={authorName} image={content.impact.image} />}
       </main>
-
-      <div className="pt-24 md:pt-32" />
-      <Footer footer={content.footer} nav={nav} logo={content.brand.logo} brand={content.brand.name} />
+      <Footer footer={content.footer} nav={nav} name={wordmark} credentials={credentials} />
       <MobileBuyBar retailer={retailer} title={content.hero.title} />
       <BackToTop />
       <ExcerptModal open={excerptOpen} onClose={closeExcerpt} title={content.excerpt.title} body={content.excerpt.body} retailer={retailer} />

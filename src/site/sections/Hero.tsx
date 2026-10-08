@@ -1,25 +1,20 @@
 import { useRef } from "react";
-import { ArrowUpRight, BookOpen, Star } from "lucide-react";
+import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
 import { gsap, MOTION_OK, useGSAP } from "../../lib/gsap";
 import type { Retailer, SiteContent } from "../../data/types";
-import BgVideo from "../components/BgVideo";
-import HeroDust from "../components/HeroDust";
-import Book3D from "../components/Book3D";
 import SmartImage from "../components/SmartImage";
 import { onBuyClick } from "../buy";
+import { scrollToTarget } from "../smooth";
 
 interface HeroProps {
   content: SiteContent;
   retailer?: Retailer;
   onExcerpt: () => void;
-  showAnnouncement: boolean;
 }
 
-/** The book, front and centre: cover on the right, title, promise, author and the buy button on the left. */
-export default function Hero({ content, retailer, onExcerpt, showAnnouncement }: HeroProps) {
+export default function Hero({ content, retailer, onExcerpt }: HeroProps) {
   const root = useRef<HTMLElement>(null);
-  const { hero, announcement, author, reviews, book } = content;
-  const praise = reviews.items.find((r) => r.quote.trim());
+  const { hero, author, chapters } = content;
 
   useGSAP(
     () => {
@@ -27,104 +22,97 @@ export default function Hero({ content, retailer, onExcerpt, showAnnouncement }:
       const mm = gsap.matchMedia();
       mm.add(MOTION_OK, () => {
         gsap
-          .timeline({ delay: 0.15 })
-          .from(q("[data-sky]"), { opacity: 0, duration: 1.6, ease: "power2.out" })
-          .from(q("[data-book]"), { y: 80, rotateY: -70, opacity: 0, duration: 1.8, ease: "expo.out" }, 0.1)
-          .from(q("[data-in]"), { y: 30, opacity: 0, duration: 1.1, stagger: 0.09, ease: "expo.out" }, 0.3);
-        // as you scroll on, the book rises a little and the sky deepens
-        gsap.to(q("[data-book-par]"), { yPercent: -12, ease: "none", scrollTrigger: { trigger: root.current, start: "top top", end: "bottom top", scrub: true } });
-        gsap.to(q("[data-sky]"), { yPercent: 18, ease: "none", scrollTrigger: { trigger: root.current, start: "top top", end: "bottom top", scrub: true } });
-        // the book leans toward the pointer (mouse only)
-        if (window.matchMedia("(pointer: fine)").matches) {
-          const ry = gsap.quickTo(q("[data-tilt]"), "rotateY", { duration: 1.2, ease: "power3.out" });
-          const rx = gsap.quickTo(q("[data-tilt]"), "rotateX", { duration: 1.2, ease: "power3.out" });
-          const onMove = (e: PointerEvent) => {
-            ry((e.clientX / window.innerWidth - 0.5) * 12);
-            rx(-(e.clientY / window.innerHeight - 0.5) * 8);
-          };
-          window.addEventListener("pointermove", onMove);
-          return () => window.removeEventListener("pointermove", onMove);
-        }
+          .timeline({ defaults: { ease: "power3.out" } })
+          .from(q("[data-in]"), { y: 26, opacity: 0, duration: 1, stagger: 0.08 })
+          .from(q("[data-books]"), { y: 40, opacity: 0, duration: 1.3 }, 0.15)
+          .from(q("[data-badge]"), { y: -14, opacity: 0, duration: 0.8 }, 0.7)
+          .from(q("[data-card]"), { y: 30, opacity: 0, duration: 1 }, 0.55);
+        gsap.to(q("[data-float]"), { y: -10, duration: 3.2, ease: "sine.inOut", yoyo: true, repeat: -1 });
       });
     },
     { scope: root },
   );
 
-  const credit = `by ${author.name}${/\bMD\b/.test(author.name) ? "" : ", MD"}`;
-
   return (
-    <section id="home" ref={root} className="on-dark relative isolate overflow-hidden bg-navy text-white">
-      <div data-sky className="absolute inset-0 -z-10">
-        <SmartImage src={hero.backgroundImage} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-50" fetchPriority="high" />
-        <BgVideo src={hero.backgroundVideo} className="absolute inset-0 h-full w-full opacity-80 mix-blend-screen" />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(11,22,56,0.95)_0%,rgba(11,22,56,0.75)_45%,rgba(11,22,56,0.2)_100%)] max-lg:bg-[linear-gradient(180deg,rgba(11,22,56,0.55),rgba(11,22,56,0.9))]" />
-        <HeroDust className="absolute inset-0 h-full w-full" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-navy" />
-      </div>
-
-      <div className="wrap grid min-h-[100svh] items-center gap-12 pt-28 pb-24 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8 lg:pt-24">
-        <div className="max-lg:order-2 max-lg:text-center">
-          {showAnnouncement && announcement.text && (
-            <p data-in className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-[0.8rem] font-medium text-gold-light">
-              <span className="h-1.5 w-1.5 rounded-full bg-gold-light" /> {announcement.text}
+    <section id="home" ref={root} className="relative overflow-hidden border-b border-line pt-[84px]">
+      <div className="pointer-events-none absolute top-0 right-0 h-[620px] w-[620px] translate-x-1/3 -translate-y-1/4 rounded-full bg-[radial-gradient(closest-side,rgba(42,54,99,0.10),transparent)]" />
+      <div className="wrap grid min-h-[calc(100svh-84px)] items-center gap-14 py-16 lg:grid-cols-[1fr_1fr] lg:gap-10 lg:py-20">
+        <div>
+          {hero.eyebrow && (
+            <p data-in className="tag caps text-[0.68rem]">
+              <Sparkles className="h-3.5 w-3.5" /> {hero.eyebrow}
             </p>
           )}
-          <h1 data-in className="title mt-6 text-[clamp(2.9rem,6.4vw,5.8rem)]">
+          <h1 data-in className="serif-head mt-8 text-[clamp(2.8rem,5.6vw,5.2rem)] leading-[1.02]">
             {hero.title}
           </h1>
-          <p data-in className="mt-5 text-[clamp(1.2rem,1.9vw,1.55rem)] leading-snug text-white/90">
-            {hero.subtitle}
+          <div data-in className="mt-6 flex flex-wrap items-center gap-4">
+            <span className="font-[family-name:var(--font-heading)] text-[1.35rem] text-gold-deep italic">by {author.name}</span>
+            <span className="h-px w-16 bg-gold/60" />
+            <span className="caps text-[0.68rem] text-ink-navy">{author.credentials.replace(/\s*·\s*/g, " · ")}</span>
+          </div>
+          <p data-in className="mt-6 max-w-xl text-[1.3rem] leading-relaxed text-ink-soft">
+            {hero.subtitle}.
           </p>
-          <p data-in className="mt-4 font-medium text-gold-light">
-            {credit}
-          </p>
-
-          <div data-in className="mt-9 flex flex-wrap gap-3 max-lg:justify-center">
+          <div data-in className="mt-7 flex flex-wrap gap-3">
             {retailer && (
-              <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-buy">
-                Buy on {retailer.label} <ArrowUpRight className="h-4 w-4" />
+              <span className="chip">
+                <span className="h-2 w-2 rounded-full bg-emerald-600" />
+                <strong className="font-semibold">{retailer.format}</strong>
+                <span className="text-sm text-muted">Available now</span>
+              </span>
+            )}
+            {chapters.items.length > 0 && (
+              <span className="chip">
+                <BookOpen className="h-4 w-4 text-gold" />
+                <strong className="font-semibold">Inside the Book</strong>
+                <span className="text-sm text-muted">({chapters.items.length} featured chapters)</span>
+              </span>
+            )}
+          </div>
+          <div data-in className="mt-10 flex flex-wrap gap-4">
+            {retailer && (
+              <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-solid">
+                Buy on {retailer.label} <ArrowRight className="h-4 w-4" />
               </a>
             )}
-            <button onClick={onExcerpt} className="btn-ghost-light">
-              <BookOpen className="h-4 w-4" /> {hero.primaryCta}
+            <button onClick={onExcerpt} className="btn-line">
+              {hero.primaryCta}
             </button>
           </div>
-          {retailer && (
-            <p data-in className="mt-4 text-sm text-white/60">
-              Available now as a {retailer.format}
-              {retailer.price && ` · ${retailer.price}`}
-            </p>
-          )}
-
-          {praise && (
-            <figure data-in className="mt-10 flex items-start gap-4 border-t border-white/10 pt-6 max-lg:justify-center max-lg:text-left">
-              <div className="flex shrink-0 gap-0.5 pt-1 text-gold-light" aria-label={`${praise.rating} out of 5 stars`}>
-                {Array.from({ length: 5 }, (_, i) => (
-                  <Star key={i} className={`h-4 w-4 ${i < praise.rating ? "fill-current" : "opacity-30"}`} />
-                ))}
-              </div>
-              <div>
-                <blockquote className="title text-xl italic text-white/90">“{praise.quote}”</blockquote>
-                <figcaption className="mt-1 text-sm text-white/55">— {praise.name}, reader</figcaption>
-              </div>
-            </figure>
-          )}
         </div>
 
-        <div className="relative max-lg:order-1">
-          <div className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[80%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(201,163,90,0.35),rgba(42,196,234,0.12)_60%,transparent)] blur-2xl" />
-          <div data-book-par>
-            <div data-book className="mx-auto w-[min(78vw,440px)] lg:w-[min(42vw,580px)] [perspective:1400px]">
-              <div data-tilt className="animate-float">
-                <SmartImage
-                  src={hero.booksImage}
-                  alt={`${hero.title} by ${author.name} — hardcover`}
-                  fetchPriority="high"
-                  className="h-auto w-full drop-shadow-[0_45px_50px_rgba(0,0,0,0.6)]"
-                  fallback={<Book3D className="mx-auto w-[62%]" cover={book.cover} />}
-                />
-              </div>
+        <div className="relative mx-auto w-full max-w-[640px]">
+          <div data-books className="relative">
+            <span data-badge className="caps absolute top-0 left-1/2 z-10 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full bg-ink-navy px-5 py-2.5 text-[0.65rem] text-white shadow-lg">
+              <Sparkles className="h-3.5 w-3.5 text-gold" /> Featured Book
+            </span>
+            <div data-float className="pt-8">
+              <SmartImage
+                src={content.book.image}
+                alt={`${hero.title} — paperback, hardcover and back cover`}
+                fetchPriority="high"
+                className="h-auto w-full drop-shadow-[0_30px_35px_rgba(30,39,73,0.35)]"
+                fallback={<SmartImage src={content.book.cover} alt={hero.title} className="mx-auto h-auto w-1/2 shadow-2xl" />}
+              />
             </div>
+          </div>
+
+          <div data-card className="paper relative mx-auto mt-6 max-w-md rounded-[6px] px-8 py-7 text-center">
+            <p className="serif-head text-[1.55rem]">{hero.title}</p>
+            <p className="mt-1 text-muted">by {author.name}</p>
+            <div className="mt-4 flex items-center justify-center gap-4 text-[0.98rem] text-ink-navy">
+              <span className="inline-flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-gold" /> {chapters.items.length} Chapters
+              </span>
+              <span className="h-px w-10 bg-line" />
+              <span className="inline-flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-gold" /> {retailer?.format ?? "Book"}
+              </span>
+            </div>
+            <button onClick={() => scrollToTarget("#about-book")} className="btn-solid mt-6 !px-6 !py-3.5">
+              Discover the Book <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>

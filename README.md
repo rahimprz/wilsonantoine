@@ -19,34 +19,24 @@ npm run preview
 
 ## The website
 
-A focused book site: the cover leads, and every section answers a reader's question — what is it,
-what's inside, who wrote it, what do readers say, where do I buy it. Deep navy and gold to match the
-cover, warm paper-white reading sections, Instrument Serif headings and Inter Tight text.
+A classic, calm author site: warm parchment pages, his original navy (`#2A3663`) and gold (`#B59F78`),
+Playfair Display headings and EB Garamond text, with the real book images throughout.
 
-| Section | What it does |
+| Section | What it shows |
 |---|---|
-| **Hero** | The book in 3D (turns gently, tilts with the pointer) beside the title, subtitle, author, **Buy on Amazon**, “Read an Excerpt”, the format, and a reader quote. |
-| **About the book** | The editions photo, the description with a drop cap, the three highlights, a buy button. |
-| **What you'll discover** | The six themes as clean cards. |
-| **Inside the book** | Featured chapters as an accordion beside the book image; excerpt + buy buttons. |
-| **The author** | Portrait, bio, “30+ years” and other highlights counting up. |
-| **Why it matters** | Who the book is for — Comfort, Clarity, Reassurance. |
-| **Premise** | One line over the rising-light video. |
-| **Reviews** | Reader review cards with stars. |
-| **Get your copy** | The 3D book and one card per edition/store (add Paperback, Hardcover, Audiobook… in the dashboard and they appear here). |
-| **FAQ** | Common reader questions (editable in Dashboard → Website → FAQ). |
-| **Footer** | Newsletter sign-up, links, socials. |
+| **Header** | “WILSON ANTOINE” wordmark with a quill, *Medical Doctor • Author* under it, letter-spaced links, an Admin pill. |
+| **Hero** | Tagline pill, the book title, “by Dr. Wilson Antoine — Medical Doctor · Author”, the subtitle, availability chips, **Buy on Amazon** + **Read an Excerpt**; on the right the book spread with a *Featured Book* badge and a details card. |
+| **About the book** | Panel with the hardcover image, description, highlights, a details table and a buy button. |
+| **Inside the book** | The featured chapters as a table of contents (I–V) with every summary visible. |
+| **What this book explores** | The six themes in a bordered grid. |
+| **The premise** | One quote on navy with the slow light video behind it. |
+| **The author** | Panel with portrait, bio and highlights. |
+| **Reviews · FAQ** | Reader cards; common questions (editable in Dashboard → Website → FAQ). |
+| **Begin the journey** | Navy panel with the book, one row per store/format, and share links. |
+| **Footer** | Wordmark, links, newsletter sign-up. |
 
-Details throughout: drifting gold light and stars in the hero, an at-a-glance strip (format, a doctor
-author, years of experience, chapters), a book-details card, a ribbon of the book's themes, gold
-ornaments over headings, a light sweep on every buy button, “Share the book” (WhatsApp, Facebook, X,
-email, copy link) and a back-to-top button whose ring fills as you read.
-
-Motion is calm and purposeful (GSAP + ScrollTrigger, Lenis smooth scroll): gentle fade-ups, the book
-rotating in, subtle parallax. Phones get a sticky “Buy” bar. Everything respects `prefers-reduced-motion`.
-
-The real book mockups, the flat front cover and the logo ship with the site in `public/books/` (no
-WordPress needed for them). Any of them can be swapped in Dashboard → Website.
+Motion is deliberately quiet: gentle fade-ups, the book floating slightly, smooth scrolling. Phones get
+a sticky Buy bar; everything respects `prefers-reduced-motion`.
 
 ### Background videos
 

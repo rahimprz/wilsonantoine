@@ -18,15 +18,15 @@ export default function MobileBuyBar({ retailer, title }: { retailer?: Retailer;
   }, []);
   if (!retailer) return null;
   return (
-    <div className={`fixed inset-x-3 bottom-3 z-40 flex items-center justify-between gap-3 rounded-2xl bg-navy/95 p-2 pl-4 text-white shadow-2xl backdrop-blur transition-all duration-500 md:hidden ${visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[130%] opacity-0"}`}>
+    <div className={`fixed inset-x-3 bottom-3 z-40 flex items-center justify-between gap-3 rounded-lg bg-ink-navy p-2 pl-4 text-white shadow-2xl backdrop-blur transition-all duration-500 md:hidden ${visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-[130%] opacity-0"}`}>
       <div className="min-w-0">
-        <p className="title truncate text-lg leading-tight">{title}</p>
+        <p className="truncate font-[family-name:var(--font-heading)] text-base leading-tight">{title}</p>
         <p className="text-xs text-white/60">
           {retailer.format}
           {retailer.price && ` · ${retailer.price}`}
         </p>
       </div>
-      <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-buy !px-4 !py-2.5 !text-sm">
+      <a href={retailer.url} target="_blank" rel="noopener" onClick={() => onBuyClick(retailer)} className="btn-solid btn-gold !px-4 !py-2.5">
         Buy <ArrowUpRight className="h-4 w-4" />
       </a>
     </div>

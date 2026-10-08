@@ -31,11 +31,11 @@ export default function BackToTop() {
     <button
       onClick={() => scrollToTarget(0)}
       aria-label="Back to top"
-      className={`fixed right-5 bottom-24 z-40 grid h-12 w-12 place-items-center rounded-full bg-navy text-gold-light shadow-xl transition-all duration-500 hover:-translate-y-1 md:right-7 md:bottom-7 ${show ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
+      className={`fixed right-5 bottom-24 z-40 grid h-12 w-12 place-items-center rounded-full bg-ink-navy text-white shadow-xl transition-all duration-500 hover:-translate-y-1 md:right-7 md:bottom-7 ${show ? "opacity-100" : "pointer-events-none translate-y-4 opacity-0"}`}
     >
       <svg className="absolute inset-0 -rotate-90" viewBox="0 0 48 48" aria-hidden>
         <circle cx="24" cy="24" r="22" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="2" />
-        <circle ref={ring} cx="24" cy="24" r="22" fill="none" stroke="#c9a35a" strokeWidth="2" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C} />
+        <circle ref={ring} cx="24" cy="24" r="22" fill="none" stroke="#b59f78" strokeWidth="2" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C} />
       </svg>
       <ArrowUp className="h-5 w-5" />
     </button>

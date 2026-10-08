@@ -20,7 +20,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     link: "#buy",
   },
   hero: {
-    eyebrow: "A new book by Dr. Wilson Antoine, MD",
+    eyebrow: "Medicine. Faith. Lived Experience.",
     title: "Postmortem Life Continuation",
     subtitle: "Compelling Evidence That Life Does Not End at Death",
     primaryCta: "Read an Excerpt",
