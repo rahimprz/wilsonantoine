@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ArrowRight, Check, Link2, Mail } from "lucide-react";
+import { ArrowRight, BookOpen, Check, Link2, Mail } from "lucide-react";
 import type { SiteContent } from "../../data/types";
 import BgVideo from "../components/BgVideo";
 import Book3D from "../components/Book3D";
@@ -58,7 +58,7 @@ export default function Begin({ buy, title, author, cover }: BeginProps) {
             {buy.body}
           </p>
 
-          <div data-reveal className="glass corners mt-9 rounded-[4px] p-2">
+          <div data-reveal className="mt-9 border-y border-gold/25">
             {retailers.map((r, i) => (
               <a
                 key={r.id}
@@ -66,10 +66,13 @@ export default function Begin({ buy, title, author, cover }: BeginProps) {
                 target="_blank"
                 rel="noopener"
                 onClick={() => onBuyClick(r)}
-                className={`group flex items-center justify-between gap-4 rounded-[3px] px-4 py-4 transition-colors hover:bg-white/[0.06] md:px-5 ${i > 0 ? "border-t border-white/10" : ""}`}
+                className={`group relative flex items-center justify-between gap-4 py-5 ${i > 0 ? "border-t border-white/10" : ""}`}
               >
-                <span className="min-w-0">
-                  <span className="block font-[family-name:var(--font-heading)] text-[1.35rem] text-star">{r.format}</span>
+                <span className="medallion h-12 w-12 group-hover:text-night group-hover:[background:#b59f78]">
+                  <BookOpen className="h-5 w-5" strokeWidth={1.5} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-[family-name:var(--font-heading)] text-[1.4rem] text-star transition-colors group-hover:text-gold-light">{r.format}</span>
                   <span className="text-mist">
                     on {r.label}
                     {r.price && <strong className="ml-2 font-semibold text-gold-light">{r.price}</strong>}

@@ -9,17 +9,19 @@ import { useReveal } from "../useReveal";
 
 function ThemeCard({ t, i, side }: { t: Theme; i: number; side: "l" | "r" }) {
   const Icon = THEME_ICONS[t.icon] ?? THEME_ICONS.sparkles;
+  const left = side === "l";
   return (
-    <article data-card={side} className="group glass relative overflow-hidden rounded-[4px] p-6 transition-[translate,border-color,box-shadow] duration-500 hover:-translate-y-1 hover:border-gold/60 hover:shadow-[0_30px_50px_-30px_rgba(181,159,120,0.5)] md:p-7">
-      <span className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-[radial-gradient(closest-side,rgba(181,159,120,0.25),transparent)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-      <div className="flex items-center justify-between">
-        <span className="grid h-12 w-12 place-items-center rounded-full border border-gold/45 text-gold transition-colors duration-500 group-hover:bg-gold group-hover:text-night">
-          <Icon className="h-5 w-5" strokeWidth={1.5} />
-        </span>
-        <span className="font-[family-name:var(--font-heading)] text-[1.7rem] text-white/15 italic transition-colors duration-500 group-hover:text-gold/50">{String(i + 1).padStart(2, "0")}</span>
+    <article data-card={side} className={`group relative flex gap-5 py-6 ${left ? "lg:flex-row-reverse lg:text-right" : ""}`}>
+      <span className="medallion relative h-14 w-14 group-hover:text-night group-hover:[background:#b59f78]">
+        <Icon className="h-5 w-5" strokeWidth={1.5} />
+      </span>
+      <div className="min-w-0">
+        <p className="font-[family-name:var(--font-heading)] text-[0.95rem] text-gold/70 italic">{String(i + 1).padStart(2, "0")}</p>
+        <h3 className="serif-head mt-0.5 text-[1.4rem] transition-colors duration-500 group-hover:!text-gold-light">{t.title}</h3>
+        {t.text && <p className="mt-1.5 text-[0.98rem] leading-relaxed text-mist">{t.text}</p>}
       </div>
-      <h3 className="serif-head mt-5 text-[1.35rem]">{t.title}</h3>
-      {t.text && <p className="mt-2 text-[0.98rem] leading-relaxed text-mist">{t.text}</p>}
+      {/* a fine line reaching toward the book */}
+      <span aria-hidden className={`absolute top-[3.3rem] hidden h-px w-8 lg:block ${left ? "-right-8 bg-gradient-to-r from-gold/60 to-transparent" : "-left-8 bg-gradient-to-l from-gold/60 to-transparent"}`} />
     </article>
   );
 }
@@ -56,7 +58,7 @@ export default function Explores({ n, explores }: { n?: number; explores: SiteCo
         <SectionHead n={n} eyebrow={explores.eyebrow} title={explores.heading} intro={explores.intro} center />
 
         <div className="mt-16 grid items-center gap-6 lg:grid-cols-[1fr_minmax(260px,0.8fr)_1fr] lg:gap-8">
-          <div className="order-2 grid gap-5 sm:grid-cols-2 lg:order-1 lg:grid-cols-1">
+          <div className="order-2 grid gap-x-8 sm:grid-cols-2 lg:order-1 lg:grid-cols-1 lg:divide-y lg:divide-gold/15">
             {left.map((t, i) => (
               <ThemeCard key={t.id} t={t} i={i} side="l" />
             ))}
@@ -70,7 +72,7 @@ export default function Explores({ n, explores }: { n?: number; explores: SiteCo
               <SmartImage src={explores.image} alt="Postmortem Life Continuation" loading="lazy" className="relative h-auto w-full drop-shadow-[0_40px_40px_rgba(0,0,0,0.6)]" />
             </div>
           </div>
-          <div className="order-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-1">
+          <div className="order-3 grid gap-x-8 sm:grid-cols-2 lg:grid-cols-1 lg:divide-y lg:divide-gold/15">
             {right.map((t, i) => (
               <ThemeCard key={t.id} t={t} i={half + i} side="r" />
             ))}

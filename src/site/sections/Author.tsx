@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { Fragment, useRef } from "react";
 import { Stethoscope } from "lucide-react";
 import { gsap, MOTION_OK, useGSAP } from "../../lib/gsap";
 import { resolveMedia } from "../../lib/media";
@@ -37,8 +37,9 @@ export default function Author({ n, author, logo }: { n?: number; author: SiteCo
       </div>
       <div className="wrap grid items-center gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-20">
         <div className="relative mx-auto w-full max-w-[420px]">
-          <div data-offset aria-hidden className="absolute inset-0 translate-x-5 translate-y-5 rounded-[4px] border border-gold/50" />
-          <div data-portrait className="corners relative overflow-hidden rounded-[4px] bg-indigo shadow-[0_50px_80px_-40px_rgba(0,0,0,0.95)]">
+          <div aria-hidden className="absolute top-[42%] left-1/2 aspect-square w-[135%] -translate-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(51,84,210,0.4),transparent)]" />
+          <div data-offset aria-hidden className="absolute inset-0 translate-x-5 translate-y-5 rounded-t-[999px] rounded-b-[4px] border border-gold/50" />
+          <div data-portrait className="relative overflow-hidden rounded-t-[999px] rounded-b-[4px] bg-indigo shadow-[0_50px_80px_-40px_rgba(0,0,0,0.95)]">
             <div data-portrait-img>
               <SmartImage
                 src={author.image}
@@ -71,19 +72,26 @@ export default function Author({ n, author, logo }: { n?: number; author: SiteCo
             {author.bio}
           </p>
           {author.highlights.length > 0 && (
-            <dl data-reveal className="mt-10 grid grid-cols-3 gap-3 md:gap-4">
-              {author.highlights.map((h) => {
-                const m = /^(\d+)(\+?)$/.exec(h.value.trim());
-                return (
-                  <div key={h.id} className="glass rounded-[4px] px-3 py-6 text-center">
-                    <dd className="serif-head gold-text text-[2.3rem] leading-none md:text-[2.7rem]" data-count={m ? m[1] : undefined} data-suffix={m ? m[2] : undefined}>
-                      {h.value}
-                    </dd>
-                    <dt className="caps mt-3 text-[0.52rem] leading-relaxed text-mist">{h.label}</dt>
-                  </div>
-                );
-              })}
-            </dl>
+            <div data-reveal className="mt-10">
+              <div className="hrule" />
+              <dl className="flex items-stretch justify-between py-7">
+                {author.highlights.map((h, i) => {
+                  const m = /^(\d+)(\+?)$/.exec(h.value.trim());
+                  return (
+                    <Fragment key={h.id}>
+                      {i > 0 && <span aria-hidden className="vrule" />}
+                      <div className="flex flex-1 flex-col-reverse items-center px-2 text-center">
+                        <dt className="caps mt-3 text-[0.52rem] leading-relaxed text-mist">{h.label}</dt>
+                        <dd className="serif-head gold-text text-[2.4rem] leading-none md:text-[3rem]" data-count={m ? m[1] : undefined} data-suffix={m ? m[2] : undefined}>
+                          {h.value}
+                        </dd>
+                      </div>
+                    </Fragment>
+                  );
+                })}
+              </dl>
+              <div className="hrule" />
+            </div>
           )}
           <p data-reveal className="mt-10 font-[family-name:var(--font-heading)] text-[2rem] text-gold/80 italic">
             — {author.name.replace(/^Dr\.?\s+/i, "")}

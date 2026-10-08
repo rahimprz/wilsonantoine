@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { Fragment, useRef } from "react";
 import { BookOpen, Compass, Star, Stethoscope, type LucideIcon } from "lucide-react";
 import { gsap, MOTION_OK, useGSAP } from "../../lib/gsap";
 import type { SiteContent } from "../../data/types";
@@ -9,7 +9,7 @@ interface Fact {
   label: string;
 }
 
-/** A glass ledge under the hero: the book at a glance, numbers counting up as it arrives. */
+/** The book at a glance between gold hairlines, numbers counting up as it arrives. */
 export default function Facts({ content }: { content: SiteContent }) {
   const root = useRef<HTMLElement>(null);
   const { author, chapters, explores, reviews, buy } = content;
@@ -51,23 +51,26 @@ export default function Facts({ content }: { content: SiteContent }) {
 
   if (!facts.length) return null;
   return (
-    <section id="facts" ref={root} aria-label="The book at a glance" className="relative z-10 -mt-px pb-6">
+    <section id="facts" ref={root} aria-label="The book at a glance" className="relative z-10 py-10 md:py-14">
       <div className="wrap">
-        <div className="glass corners grid grid-cols-2 rounded-[4px] shadow-[0_40px_80px_-40px_rgba(0,0,0,0.9)] lg:grid-cols-4">
+        <div className="hrule" />
+        <div className="grid grid-cols-2 gap-y-10 py-10 lg:flex lg:items-stretch lg:justify-between lg:py-12">
           {facts.map((f, i) => (
-            <div key={f.label} data-fact className={`flex items-center gap-4 px-5 py-6 md:px-8 md:py-7 ${i % 2 ? "border-l border-white/10" : ""} ${i > 1 ? "border-t border-white/10 lg:border-t-0" : ""} ${i === 2 ? "lg:border-l" : ""}`}>
-              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-gold/40 bg-gold/10 text-gold">
-                <f.icon className="h-5 w-5" strokeWidth={1.5} />
-              </span>
-              <span className="min-w-0">
-                <span data-num={f.value} className="serif-head block text-[1.9rem] leading-none md:text-[2.2rem]">
+            <Fragment key={f.label}>
+              {i > 0 && <span aria-hidden className="vrule hidden lg:block" />}
+              <div data-fact className="group flex flex-col items-center px-4 text-center lg:flex-1">
+                <span className="medallion h-14 w-14 group-hover:text-white">
+                  <f.icon className="h-5 w-5" strokeWidth={1.5} />
+                </span>
+                <span data-num={f.value} className="serif-head gold-text mt-5 block text-[2.6rem] leading-none md:text-[3.1rem]">
                   {f.value}
                 </span>
-                <span className="caps mt-1.5 block text-[0.56rem] leading-relaxed text-mist">{f.label}</span>
-              </span>
-            </div>
+                <span className="caps mt-3 block max-w-[14rem] text-[0.56rem] leading-relaxed text-mist">{f.label}</span>
+              </div>
+            </Fragment>
           ))}
         </div>
+        <div className="hrule" />
       </div>
     </section>
   );

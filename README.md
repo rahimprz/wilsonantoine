@@ -26,17 +26,17 @@ headings, Jost text, his WA quill logo and the real book images throughout.
 | Section | What it shows |
 |---|---|
 | **Header** | A slim announcement line (tucks away on scroll), the WA quill logo, letter-spaced links with a gold underline for the section you're in, an Admin pill and *Get the Book*. A gold line along the bottom fills as you read. |
-| **Hero** | Galaxy photo, the nebula video loop and live twinkling stars. Tag, the title word by word (*Continuation* in shimmering gold), subtitle, byline, availability chips, **Buy the Book** + **Read an Excerpt**, a reader quote. On the right the five-book spread inside slowly turning orbit rings, *Featured Book* badge, floating rating/themes badges and a details card. The spread tilts toward the cursor; the sky drifts as you scroll. |
-| **At a glance** | Glass strip — years of practice, chapters, themes, reader rating — counting up as it arrives. |
-| **I. About the book** | Glass panel with gold corner brackets: the hardcover floating in a ringed halo, drop-cap description, highlights, details table, buy + “Know About Author”. |
+| **Hero** | Galaxy photo, the nebula video loop and live twinkling stars. Tag, the title word by word (*Continuation* in shimmering gold), subtitle, byline, availability chips, **Buy the Book** + **Read an Excerpt**, a reader quote. On the right the five-book spread inside slowly turning orbit rings, standing on a pool of light, with the reader rating and theme count beneath. The spread tilts toward the cursor; the sky drifts as you scroll. |
+| **At a glance** | Years of practice, chapters, themes and reader rating between gold hairlines, counting up as they arrive. |
+| **I. About the book** | The hardcover floating in a ringed halo beside a slowly turning gold seal; drop-cap description, highlights, a colophon line (author · format · inside · subject), buy + “Know About Author”. |
 | **Themes ribbon** | His six themes scrolling past in gold italic. |
-| **II. Inside the book** | Chapters I–V as a lit table of contents: a gold thread draws down the list as you read, each numeral glows as it passes the middle of the screen. Beside it (desktop) a 3D book made from the flat cover — spine, pages and shadow — that follows the cursor and stays pinned while you read. |
-| **III. What this book explores** | The Earth backdrop, six numbered glass cards flying in from both sides around the tilted book. |
+| **II. Inside the book** | Chapters I–V as a lit table of contents: a gold thread draws down the list as you read, each numeral medallion glows as it passes the middle of the screen. Beside it (desktop) a 3D book made from the flat cover — spine, pages and shadow — that follows the cursor and stays pinned while you read. |
+| **III. What this book explores** | The Earth backdrop and the six themes as gold medallions flying in from both sides, each reaching toward the tilted book in the centre. |
 | **The premise** | Full-screen quote over the rising-light video; the words light up one by one as you scroll. |
-| **IV. Why this book matters** | The front-and-back pair with an offset gold frame; Comfort, Clarity, Reassurance. |
-| **V. The author** | Portrait revealed like a curtain with a gold offset frame, bio, highlights counting up, his name signed in italic. |
-| **VI. Reviews** | Average rating, glass reader cards that rise in. |
-| **VII. FAQ** | Numbered questions in a gold-edged accordion; a “Still curious?” card. |
+| **IV. Why this book matters** | The front-and-back pair inside orbit rings; Comfort, Clarity, Reassurance. |
+| **V. The author** | An arched portrait revealed like a curtain with a gold offset arch, bio, highlights counting up, his name signed in italic. |
+| **VI. Reviews** | One reader's words at a time, large and centred, turning over every few seconds (pauses on hover); pick a reader to jump to them. |
+| **VII. FAQ** | Numbered questions on gold hairlines that open in place; a “Still curious?” note. |
 | **Begin the journey** | The light-tunnel video, the 3D book, one row per store/format, share links. |
 | **Footer** | His original footer, refined: centred logo, newsletter pill, links, gold social circles, a faint giant wordmark. |
 

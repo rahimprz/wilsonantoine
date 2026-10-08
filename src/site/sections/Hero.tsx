@@ -87,7 +87,8 @@ export default function Hero({ content, retailer, onExcerpt, topOffset }: HeroPr
       <div className="wrap grid flex-1 items-center gap-14 py-14 lg:grid-cols-[1.02fr_0.98fr] lg:gap-8 lg:py-16">
         <div data-copy className="relative z-10">
           {hero.eyebrow && (
-            <p data-tag className="tag caps text-[0.64rem]">
+            <p data-tag className="caps flex items-center gap-3 text-[0.58rem] text-gold-light sm:text-[0.64rem]">
+              <span className="hidden h-px w-10 bg-gradient-to-r from-transparent to-gold sm:block" />
               <Sparkles className="h-3.5 w-3.5 text-gold" /> {hero.eyebrow}
             </p>
           )}
@@ -114,22 +115,23 @@ export default function Hero({ content, retailer, onExcerpt, topOffset }: HeroPr
             <span className="caps text-[0.62rem] text-mist">{author.credentials.replace(/\s*·\s*/g, " · ")}</span>
           </div>
 
-          <div data-in className="mt-7 flex flex-wrap gap-2.5">
+          <div data-in className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3 text-[0.98rem]">
             {retailer && (
-              <span className="chip">
+              <span className="inline-flex items-center gap-2.5">
                 <span className="relative flex h-2 w-2">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
                 </span>
-                <strong className="font-medium">{retailer.format}</strong>
-                <span className="text-sm text-mist">Available now</span>
+                <strong className="font-medium text-star">{retailer.format}</strong>
+                <span className="text-mist">available now</span>
               </span>
             )}
+            {retailer && chapters.items.length > 0 && <span aria-hidden className="h-4 w-px bg-gold/40" />}
             {chapters.items.length > 0 && (
-              <span className="chip">
+              <span className="inline-flex items-center gap-2.5">
                 <BookOpen className="h-4 w-4 text-gold" />
-                <strong className="font-medium">{chapters.items.length} chapters</strong>
-                <span className="text-sm text-mist">featured inside</span>
+                <strong className="font-medium text-star">{chapters.items.length} chapters</strong>
+                <span className="text-mist">featured inside</span>
               </span>
             )}
           </div>
@@ -175,9 +177,11 @@ export default function Hero({ content, retailer, onExcerpt, topOffset }: HeroPr
 
           <div data-tilt className="[transform-style:preserve-3d]">
             <div data-books className="relative">
-              <span data-badge className="caps absolute top-0 left-1/2 z-10 inline-flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full border border-gold/50 bg-[#0a1015]/80 px-5 py-2.5 text-[0.6rem] text-gold-light shadow-[0_10px_30px_-10px_rgba(181,159,120,0.6)] backdrop-blur">
+              <p data-badge className="caps absolute top-0 left-1/2 z-10 flex -translate-x-1/2 items-center gap-3 text-[0.6rem] whitespace-nowrap text-gold-light">
+                <span className="h-px w-10 bg-gradient-to-r from-transparent to-gold" />
                 <Sparkles className="h-3.5 w-3.5 text-gold" /> Featured Book
-              </span>
+                <span className="h-px w-10 bg-gradient-to-l from-transparent to-gold" />
+              </p>
               <div data-float className="pt-10">
                 <SmartImage
                   src={hero.booksImage}
@@ -188,37 +192,35 @@ export default function Hero({ content, retailer, onExcerpt, topOffset }: HeroPr
                 />
               </div>
 
-              {avg > 0 && (
-                <span data-badge className="absolute top-[18%] -left-2 hidden md:block">
-                  <span data-bob className="glass flex items-center gap-3 rounded-full px-4 py-2.5 shadow-xl">
-                    <Star className="h-4 w-4 fill-gold text-gold" />
-                    <span className="text-sm leading-tight text-star">
-                      <strong className="font-semibold">{avg.toFixed(1)}</strong> <span className="text-mist">reader rating</span>
-                    </span>
-                  </span>
-                </span>
-              )}
-              {explores.themes.length > 0 && (
-                <span data-badge className="absolute -right-2 bottom-[16%] hidden md:block">
-                  <span data-bob className="glass flex items-center gap-3 rounded-full px-4 py-2.5 shadow-xl">
-                    <span className="grid h-6 w-6 place-items-center rounded-full bg-cyan/15 text-cyan">
-                      <Sparkles className="h-3.5 w-3.5" />
-                    </span>
-                    <span className="text-sm leading-tight text-star">
-                      <strong className="font-semibold">{explores.themes.length} themes</strong> <span className="text-mist">explored</span>
-                    </span>
-                  </span>
-                </span>
-              )}
+              <div aria-hidden className="floor-glow pointer-events-none absolute -bottom-6 left-1/2 -z-10 h-16 w-[80%] -translate-x-1/2" />
             </div>
           </div>
 
-          <div data-card className="glass corners relative mx-auto -mt-2 max-w-md rounded-[4px] px-7 py-6 text-center shadow-[0_30px_60px_-30px_rgba(0,0,0,0.9)]">
-            <p className="caps text-[0.58rem] text-gold">The book</p>
-            <p className="serif-head mt-2 text-[1.45rem]">{hero.title}</p>
-            <p className="mt-0.5 text-mist">by {author.name}</p>
-            <button onClick={() => scrollToTarget("#about-book")} className="caps mt-4 inline-flex items-center gap-2 text-[0.62rem] text-gold-light transition hover:text-white">
-              Discover the book <ArrowRight className="h-3.5 w-3.5" />
+          <div data-card className="mt-8 flex items-stretch justify-center gap-6 text-center md:gap-9">
+            {avg > 0 && (
+              <div>
+                <p className="serif-head gold-text text-[2rem] leading-none">{avg.toFixed(1)}</p>
+                <p className="mt-2 flex justify-center gap-0.5 text-gold" aria-label={`${avg.toFixed(1)} out of 5 stars`}>
+                  {Array.from({ length: 5 }, (_, k) => (
+                    <Star key={k} className={`h-3 w-3 ${k < Math.round(avg) ? "fill-current" : "opacity-30"}`} />
+                  ))}
+                </p>
+                <p className="caps mt-1.5 text-[0.5rem] text-mist">Reader rating</p>
+              </div>
+            )}
+            {avg > 0 && explores.themes.length > 0 && <span aria-hidden className="vrule" />}
+            {explores.themes.length > 0 && (
+              <div>
+                <p className="serif-head gold-text text-[2rem] leading-none">{explores.themes.length}</p>
+                <p className="caps mt-[1.35rem] text-[0.5rem] text-mist">Themes explored</p>
+              </div>
+            )}
+            <span aria-hidden className="vrule" />
+            <button onClick={() => scrollToTarget("#about-book")} className="group flex flex-col items-center justify-center">
+              <span data-bob className="grid h-11 w-11 place-items-center rounded-full border border-gold/50 text-gold-light transition-colors group-hover:bg-gold group-hover:text-night">
+                <ArrowRight className="h-4 w-4 rotate-90" />
+              </span>
+              <span className="caps mt-2 text-[0.5rem] text-mist transition group-hover:text-gold-light">Discover the book</span>
             </button>
           </div>
         </div>

@@ -354,6 +354,39 @@ html.lenis body {
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
   }
+  /* a gold hairline that fades out at both ends, for dividing without boxing */
+  .vrule {
+    width: 1px;
+    align-self: stretch;
+    background: linear-gradient(180deg, transparent, rgb(181 159 120 / 0.55), transparent);
+  }
+  .hrule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(181 159 120 / 0.45) 20%, rgb(181 159 120 / 0.45) 80%, transparent);
+  }
+  /* round gold-ringed icon with a soft halo */
+  .medallion {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 999px;
+    color: var(--color-gold-light);
+    border: 1px solid rgb(181 159 120 / 0.5);
+    background: radial-gradient(circle at 50% 35%, rgb(181 159 120 / 0.22), rgb(10 17 48 / 0.6) 70%);
+    box-shadow:
+      0 0 0 5px rgb(181 159 120 / 0.06),
+      0 0 34px -4px rgb(181 159 120 / 0.35);
+    transition:
+      background-color 0.5s ease,
+      color 0.5s ease,
+      box-shadow 0.5s ease;
+  }
+  /* an ellipse of light for objects to stand on */
+  .floor-glow {
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(181 159 120 / 0.35), rgb(51 84 210 / 0.18) 55%, transparent);
+    filter: blur(6px);
+  }
 }
 
 @keyframes spin-slow {

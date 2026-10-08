@@ -58,15 +58,18 @@ export default function Inside({ n, chapters, cover, title, author, retailer, ha
             <span aria-hidden className="absolute top-0 bottom-0 left-[1.6rem] w-px bg-white/10 md:left-[2.1rem]" />
             <span data-thread aria-hidden className="absolute top-0 bottom-0 left-[1.6rem] w-px origin-top bg-gradient-to-b from-gold via-gold-light to-cyan md:left-[2.1rem]" />
             {chapters.items.map((ch, i) => (
-              <li key={ch.id} data-ch data-reveal={0.04} className="group relative grid grid-cols-[3.2rem_1fr] gap-5 py-5 md:grid-cols-[4.2rem_1fr] md:gap-7" onMouseEnter={() => track("chapter_open", ch.title)}>
+              <li key={ch.id} data-ch data-reveal={0.04} className="group relative grid grid-cols-[3.2rem_1fr] gap-5 pt-7 first:pt-0 md:grid-cols-[4.2rem_1fr] md:gap-8" onMouseEnter={() => track("chapter_open", ch.title)}>
                 <span data-numeral className="relative z-10 grid h-[3.2rem] w-[3.2rem] place-items-center rounded-full border border-gold/50 bg-[#0d1640] font-[family-name:var(--font-heading)] text-[1.15rem] text-gold-light italic shadow-[0_0_0_6px_rgba(13,22,64,0.9)] transition-[background-color,color] duration-500 group-hover:bg-gold group-hover:text-night md:h-[4.2rem] md:w-[4.2rem] md:text-[1.45rem]">
                   {ROMAN[i] ?? i + 1}
                 </span>
-                <div className="glass relative overflow-hidden rounded-[4px] px-6 py-6 transition-[translate,border-color] duration-500 group-hover:-translate-y-0.5 group-hover:border-gold/50 md:px-8">
-                  <span className="absolute inset-y-0 left-0 w-[3px] origin-top scale-y-0 bg-gradient-to-b from-gold-light to-gold-deep transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-y-100" />
-                  <p className="caps text-[0.56rem] text-gold">Chapter {ROMAN[i] ?? i + 1}</p>
-                  <h3 className="serif-head mt-2 text-[1.45rem] md:text-[1.65rem]">{ch.title}</h3>
-                  <p className="mt-3 text-[1.02rem] leading-relaxed text-mist">{ch.summary}</p>
+                <div className="relative pt-1 pb-7 md:pt-2.5">
+                  <p className="caps flex items-center gap-3 text-[0.56rem] text-gold">
+                    Chapter {ROMAN[i] ?? i + 1}
+                    <span className="h-px w-8 origin-left bg-gold/50 transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-x-[2.5]" />
+                  </p>
+                  <h3 className="serif-head mt-2 text-[1.55rem] transition-colors duration-500 group-hover:!text-gold-light md:text-[1.85rem]">{ch.title}</h3>
+                  <p className="mt-3 max-w-xl text-[1.04rem] leading-relaxed text-mist">{ch.summary}</p>
+                  {i < chapters.items.length - 1 && <span aria-hidden className="hrule absolute right-0 bottom-0 left-0" />}
                 </div>
               </li>
             ))}
