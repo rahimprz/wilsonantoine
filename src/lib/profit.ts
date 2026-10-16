@@ -134,29 +134,84 @@ export interface PartnerLine {
   share: number;
   investment: number;
   earned: number; // profit earned in the period
+  repayment: number; // investment repaid from the owner's profit: negative for the owner, positive for whoever is repaid
   paidProfit: number; // profit paid out in the period
   paidCapital: number; // investment returned in the period
-  balance: number; // earned − paid profit
+  balance: number; // earned ± repayment − paid profit
 }
 
-/**
- * Who earned what. Shared profit (printed copies, or everything when the split covers all sales)
- * is divided by share; profit from formats outside the deal goes wholly to the owner.
- */
-export function distribution(partners: Partner[], deal: Deal, sales: Sale[], payouts: Payout[], p: Printing) {
+/** Shared profit (printed copies, or everything when the split covers all sales) and the owner's own. */
+function earnings(partners: Partner[], deal: Deal, sales: Sale[], p: Printing) {
   const covered = (s: Sale) => deal.splitScope === "all" || p.isPrinted(s.format);
   const shared = ledger(sales.filter(covered));
   const ownerOnly = ledger(sales.filter((s) => !covered(s)));
   const split = shares(partners, deal);
+  const earned = (partner: Partner) => round(shared.profit * (split.get(partner.id) ?? 0) + (partner.owner ? ownerOnly.profit : 0));
+  return { shared, ownerOnly, split, earned };
+}
+
+/** Partners whose investment the owner pays back from his profit, and how much in all. */
+function owedTo(partners: Partner[]) {
+  const owed = partners.filter((x) => !x.owner && (x.repayable ?? 0) > 0);
+  return { owed, total: round(owed.reduce((a, x) => a + (x.repayable ?? 0), 0)) };
+}
+
+/** What the owner's profit on these sales has paid back so far: all of it, until the total is reached. */
+function repaidFrom(partners: Partner[], deal: Deal, sales: Sale[], p: Printing) {
+  const { total } = owedTo(partners);
+  const owner = partners.find((x) => x.owner);
+  if (!owner || total <= 0) return 0;
+  return round(Math.min(total, Math.max(0, earnings(partners, deal, sales, p).earned(owner))));
+}
+
+/**
+ * Who earned what. Shared profit is divided by share; profit from formats outside the deal goes
+ * wholly to the owner. When a partner's investment is repaid from the owner's profit, the owner's
+ * balance goes down and theirs goes up by the same amount (counted over the sales given — pass
+ * every sale for balances to date).
+ */
+export function distribution(partners: Partner[], deal: Deal, sales: Sale[], payouts: Payout[], p: Printing) {
+  const { shared, ownerOnly, split, earned } = earnings(partners, deal, sales, p);
+  const { owed, total } = owedTo(partners);
+  const repaid = repaidFrom(partners, deal, sales, p);
   const lines: PartnerLine[] = partners.map((partner) => {
     const share = split.get(partner.id) ?? 0;
-    const earned = round(shared.profit * share + (partner.owner ? ownerOnly.profit : 0));
     const mine = payouts.filter((x) => x.partnerId === partner.id);
     const paidProfit = round(mine.filter((x) => x.kind === "profit").reduce((a, x) => a + x.amount, 0));
     const paidCapital = round(mine.filter((x) => x.kind === "capital").reduce((a, x) => a + x.amount, 0));
-    return { partner, share, investment: partner.investment, earned, paidProfit, paidCapital, balance: round(earned - paidProfit) };
+    const repayment = partner.owner ? -repaid : owed.includes(partner) ? round((repaid * (partner.repayable ?? 0)) / total) : 0;
+    const e = earned(partner);
+    return { partner, share, investment: partner.investment, earned: e, repayment, paidProfit, paidCapital, balance: round(e + repayment - paidProfit) };
   });
   return { shared, ownerOnly, lines };
+}
+
+// ---------------------------------------------------------------- repayment
+
+/**
+ * The investment the owner is paying back out of the owner's share of the profit: all of that
+ * profit goes to the partners owed (in proportion to what each is owed) until it's repaid. Counted
+ * from the first sale through `end`; `inPeriod` is the part repaid from `start` to `end`.
+ */
+export function repayment(partners: Partner[], deal: Deal, sales: Sale[], p: Printing, start?: string, end?: string) {
+  const { owed, total } = owedTo(partners);
+  const owner = partners.find((x) => x.owner);
+  const through = end ? sales.filter((s) => s.date <= end) : sales;
+  const before = start ? sales.filter((s) => s.date < start) : [];
+  const repaid = repaidFrom(partners, deal, through, p);
+  const ownerEarned = owner ? earnings(partners, deal, through, p).earned(owner) : 0;
+  return {
+    owner,
+    owed,
+    to: owed.map((x) => x.name),
+    total,
+    repaid,
+    inPeriod: round(repaid - repaidFrom(partners, deal, before, p)),
+    remaining: round(total - repaid),
+    progress: total > 0 ? repaid / total : 0,
+    ownerEarned,
+    ownerKeeps: round(ownerEarned - repaid),
+  };
 }
 
 // ---------------------------------------------------------------- outlook

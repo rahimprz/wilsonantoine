@@ -15,7 +15,6 @@ import {
   Menu,
   Receipt,
   Settings as SettingsIcon,
-  SquareKanban,
   UsersRound,
   X,
 } from "lucide-react";
@@ -38,7 +37,6 @@ import Sales from "./views/Sales";
 import Profit from "./views/Profit";
 import Inventory from "./views/Inventory";
 import Statements from "./views/Statements";
-import Pipeline from "./views/Pipeline";
 import Reps from "./views/Reps";
 import Subscribers from "./views/Subscribers";
 import Website from "./views/Website";
@@ -50,7 +48,6 @@ const NAV = [
   { to: "/admin/profit", label: "Profit & split", icon: HandCoins },
   { to: "/admin/inventory", label: "Print & stock", icon: Package },
   { to: "/admin/statements", label: "Statements", icon: FileText },
-  { to: "/admin/pipeline", label: "Pipeline", icon: SquareKanban },
   { to: "/admin/reps", label: "Sales reps", icon: UsersRound },
   { to: "/admin/subscribers", label: "Subscribers", icon: Mail },
   { to: "/admin/website", label: "Website", icon: Globe },
@@ -331,7 +328,6 @@ function Shell({ onLock: lockLocal }: { onLock: () => void }) {
             <Route path="profit" element={<Profit />} />
             <Route path="inventory" element={<Inventory />} />
             <Route path="statements" element={<Statements />} />
-            <Route path="pipeline" element={<Pipeline />} />
             <Route path="reps" element={<Reps />} />
             <Route path="subscribers" element={<Subscribers />} />
             <Route path="website" element={<Website />} />

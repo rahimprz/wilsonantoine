@@ -128,6 +128,8 @@ export interface Partner {
   investment: number;
   /** The dashboard's owner — receives 100% of any profit outside the shared split. */
   owner?: boolean;
+  /** This partner's total investment that the owner pays back out of his share of the profit. */
+  repayable?: number;
   createdAt: number;
 }
 
@@ -184,7 +186,17 @@ export interface Statement {
   source: "dashboard" | "publisher";
   notes: string;
   /** Figures as issued, so history doesn't shift when later sales are edited. */
-  snapshot?: { units: number; gross: number; vendor: number; net: number; cost: number; profit: number; shares: { name: string; investment: number; profit: number }[] };
+  snapshot?: {
+    units: number;
+    gross: number;
+    vendor: number;
+    net: number;
+    cost: number;
+    profit: number;
+    shares: { name: string; investment: number; profit: number }[];
+    /** Investment the owner repays from his profit, as it stood at the end of the period. */
+    repayment?: { payer: string; to: string; total: number; inPeriod: number; repaid: number; remaining: number };
+  };
   createdAt: number;
 }
 

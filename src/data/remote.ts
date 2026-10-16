@@ -63,7 +63,7 @@ const TABLES: TableSpec[] = [
   {
     table: "partners",
     store: partnersStore as unknown as Store<Rec[]>,
-    fields: { id: s(), name: s(), role: s(""), investment: n(0), owner: b(false, true), createdAt: n(0) },
+    fields: { id: s(), name: s(), role: s(""), investment: n(0), owner: b(false, true), repayable: n(0), createdAt: n(0) },
   },
   {
     table: "print_runs",

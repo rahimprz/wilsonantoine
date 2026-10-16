@@ -3,9 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import { Download, Eye, FileText, Printer, Save, Trash2 } from "lucide-react";
 import { useStore } from "../../lib/store";
 import { download, toCSV } from "../../lib/csv";
-import { isoDay, num, parseDay } from "../../lib/format";
+import { num, parseDay } from "../../lib/format";
 import { uid } from "../../lib/id";
-import { distribution, ledger, perCopy, printing, salesIn, stock } from "../../lib/profit";
+import { distribution, ledger, perCopy, printing, repayment, salesIn, stock } from "../../lib/profit";
 import { contentStore, dealStore, partnersStore, printRunsStore, salesStore, statementsStore } from "../../data/stores";
 import type { Statement } from "../../data/types";
 import { useAdmin } from "../context";
@@ -33,7 +33,8 @@ export default function Statements() {
   const periodState = usePeriod(fromQuery ? "custom" : "cumulative", { start: params.get("start") ?? "", end: params.get("end") ?? "" });
   const { period } = periodState;
   const owner = partners.find((p) => p.owner);
-  const [issuedOn, setIssuedOn] = useState(isoDay());
+  // the report is dated where its figures end (the latest sale) unless a date is picked
+  const [pickedDate, setIssuedOn] = useState("");
   const [preparedBy, setPreparedBy] = useState(deal.publisher || owner?.name || "");
   const [notes, setNotes] = useState("");
   const [viewing, setViewing] = useState<Statement | null>(null);
@@ -43,11 +44,22 @@ export default function Statements() {
   const printed = stock(runs, sales).reduce((a, f) => a + f.printed, 0);
   const start = viewing?.start ?? period.start;
   const end = viewing?.end ?? period.end;
+  const issuedOn = pickedDate || period.end;
   const live = useMemo(() => {
     const periodSales = salesIn(sales, start, end);
     const l = ledger(periodSales);
     const d = distribution(partners, deal, periodSales, [], p);
-    return { units: l.units, gross: l.gross, vendor: l.vendor, net: l.net, cost: l.cost, profit: l.profit, shares: d.lines.map((x) => ({ name: x.partner.name, investment: x.investment, profit: x.earned })) } satisfies Figures;
+    const r = repayment(partners, deal, sales, p, start, end);
+    return {
+      units: l.units,
+      gross: l.gross,
+      vendor: l.vendor,
+      net: l.net,
+      cost: l.cost,
+      profit: l.profit,
+      shares: d.lines.map((x) => ({ name: x.partner.name, investment: x.investment, profit: x.earned })),
+      ...(r.total > 0 && { repayment: { payer: r.owner?.name ?? "", to: r.to.join(" & "), total: r.total, inPeriod: r.inPeriod, repaid: r.repaid, remaining: r.remaining } }),
+    } satisfies Figures;
   }, [sales, start, end, partners, deal, p]);
   const figures: Figures = viewing?.snapshot ?? live;
   const drift = viewing?.snapshot && (Math.abs(viewing.snapshot.profit - live.profit) > 0.005 || viewing.snapshot.units !== live.units);
@@ -78,6 +90,14 @@ export default function Statements() {
       { item: "Net revenue received", amount: figures.net.toFixed(2) },
       { item: "Printing cost", amount: figures.cost.toFixed(2) },
       { item: "Total net profit", amount: figures.profit.toFixed(2) },
+      ...(figures.repayment
+        ? [
+            { item: `${figures.repayment.to} total investment`, amount: figures.repayment.total.toFixed(2) },
+            { item: `Repaid from ${possessive(figures.repayment.payer)} profit this period`, amount: figures.repayment.inPeriod.toFixed(2) },
+            { item: "Repaid to date", amount: figures.repayment.repaid.toFixed(2) },
+            { item: "Investment left to repay", amount: figures.repayment.remaining.toFixed(2) },
+          ]
+        : []),
       ...figures.shares.map((s) => ({ item: `Profit — ${s.name}`, amount: s.profit.toFixed(2) })),
     ];
     download(`sales-profit-statement-${start}-to-${end}.csv`, toCSV(rows, [
@@ -264,6 +284,7 @@ function StatementDoc(d: DocProps) {
   const names = d.investments.map((x) => x.name);
   const joined = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0] ?? "";
   const books = `${num(f.units)} ${f.units === 1 ? "book" : "books"}`;
+  const r = f.repayment && f.repayment.total > 0 ? f.repayment : null;
   return (
     <article className="print-doc mx-auto max-w-[820px] bg-white px-8 py-10 font-sans text-[#333] shadow-[0_20px_50px_-20px_rgba(0,0,0,0.5)] md:px-14 md:py-12">
       <header className="flex items-baseline gap-3 border-b-2 border-[#c9a227] pb-2">
@@ -373,8 +394,25 @@ function StatementDoc(d: DocProps) {
         </table>
       </section>
 
+      {r && (
+        <section className="break-inside-avoid">
+          <Bar n="06">Investment Repayment</Bar>
+          <p className="mb-4 text-[0.88rem] leading-relaxed">
+            {r.to} invested a total of {money(r.total)} in the title. {possessive(r.payer)} share of the net profit is applied toward repaying this investment until it is recovered in full.
+          </p>
+          <Table
+            rows={[
+              [`${r.to} Total Investment`, money(r.total)],
+              ...(d.cumulative ? [] : ([[`Repaid from ${possessive(r.payer)} Profit This Period`, money(r.inPeriod)]] as [ReactNode, ReactNode][])),
+              [d.cumulative ? `Repaid from ${possessive(r.payer)} Profit to Date` : "Repaid to Date", money(r.repaid)],
+              ["Balance Remaining", money(r.remaining), true],
+            ]}
+          />
+        </section>
+      )}
+
       <section className="break-inside-avoid">
-        <Bar n="06">Summary</Bar>
+        <Bar n={r ? "07" : "06"}>Summary</Bar>
         <p className="text-[0.88rem] leading-relaxed">
           As of the sale of {books} during the period {fmtLong(d.start)} – {fmtLong(d.end)}, the project has generated a total net profit of {money(f.profit)}.
           {equal ? " Based on the equal investment made by both parties, profit has been distributed as follows:" : " Profit has been distributed as follows:"}
@@ -383,8 +421,14 @@ function StatementDoc(d: DocProps) {
           {f.shares.map((s) => (
             <p key={s.name}>
               <strong className="text-[#1e2a4f]">{possessive(s.name)} Profit:</strong> {money(s.profit)}
+              {r && s.name === r.payer && r.inPeriod > 0 && ` — ${money(r.inPeriod)} applied to repaying ${possessive(r.to)} investment`}
             </p>
           ))}
+          {r && (
+            <p className="mt-2 border-t border-[#e2d6b3] pt-2">
+              <strong className="text-[#1e2a4f]">{possessive(r.to)} Investment Left to Repay:</strong> {money(r.remaining)}
+            </p>
+          )}
         </div>
         <p className="mt-6 text-[0.88rem] leading-relaxed italic">This report reflects the current financial position based on the sale of {books} and will continue to be updated as additional book sales occur.</p>
         {d.notes && <p className="mt-4 text-[0.88rem] leading-relaxed whitespace-pre-line">{d.notes}</p>}

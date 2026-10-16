@@ -2,7 +2,7 @@ import { useState } from "react";
 import { FileSpreadsheet, Mail, MapPin, Pencil, Phone, Plus, Trash2, UsersRound } from "lucide-react";
 import { useStore } from "../../lib/store";
 import { gross, inRange, repStats } from "../../lib/metrics";
-import { num, pct } from "../../lib/format";
+import { num } from "../../lib/format";
 import { download, toCSV } from "../../lib/csv";
 import { uid } from "../../lib/id";
 import { leadsStore, repsStore, salesStore } from "../../data/stores";
@@ -119,7 +119,7 @@ export default function Reps() {
               </Button>
             }
           >
-            Reps can be assigned to sales and pipeline opportunities. Their copies, revenue, commission and monthly target progress appear here.
+            Reps can be assigned to sales. Their copies, revenue, commission and monthly target progress appear here.
           </EmptyState>
         </Card>
       ) : (
@@ -178,11 +178,6 @@ export default function Reps() {
                 <Progress value={s.targetProgress} label={`${s.rep.name} monthly target`} />
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
-                <Badge>{num(s.openLeads)} open opportunities</Badge>
-                {s.pipelineValue > 0 && <Badge tone="gold">{money(s.pipelineValue)} in pipeline</Badge>}
-                <Badge tone={s.winRate == null ? "neutral" : s.winRate >= 0.5 ? "good" : "warn"}>Win rate {s.winRate == null ? "—" : pct(s.winRate)}</Badge>
-              </div>
 
               {(s.rep.email || s.rep.phone) && (
                 <div className="mt-4 flex flex-wrap gap-4 border-t border-white/[0.05] pt-3 text-xs">

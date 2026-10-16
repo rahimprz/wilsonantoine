@@ -5,12 +5,12 @@ import { useStore } from "../../lib/store";
 import { fmtDay, fmtDayYear, greeting, num, sharePct } from "../../lib/format";
 import { contentStore, dealStore, partnersStore, printRunsStore, repsStore, salesStore, settingsStore } from "../../data/stores";
 import { resolveMedia } from "../../lib/media";
-import { distribution, ledger, outlook, perCopy, printing } from "../../lib/profit";
+import { distribution, ledger, outlook, perCopy, printing, repayment } from "../../lib/profit";
 import { primaryRetailer } from "../../site/buy";
 import { useAdmin } from "../context";
 import { Kpi, SaleEditor } from "../components";
 import { Badge, Button, Card, DemoBadge, EmptyState, PageHeader } from "../ui";
-import { NumberedHeader, Rows } from "./Profit";
+import { NumberedHeader, RepaymentCard, Rows } from "./Profit";
 
 /**
  * The publisher's Book Sales & Profit Distribution Report, kept live: the same figures, cumulative
@@ -33,6 +33,7 @@ export default function Overview() {
   const copy = perCopy(deal, p);
   const dist = distribution(partners, deal, sales, [], p);
   const mine = dist.lines.find((x) => x.partner.owner);
+  const repay = repayment(partners, deal, sales, p);
   const since = deal.startDate || sales.reduce((min, s) => (!min || s.date < min ? s.date : min), "");
   const needsSetup = look.invested <= 0 || runs.length === 0;
   const recent = [...sales].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 6);
@@ -57,7 +58,7 @@ export default function Overview() {
 
       <BookBanner
         stats={[
-          { label: "Total investment", value: money(look.invested) },
+          { label: "Printing investment", value: money(look.invested) },
           { label: "Books printed", value: num(look.printed) },
           { label: "Printing cost per book", value: money(copy.cost) },
           { label: "Selling price per book", value: money(copy.price) },
@@ -89,6 +90,7 @@ export default function Overview() {
           hint={
             <>
               {mine && partners.length > 1 && `${sharePct(mine.share)} share · `}
+              {repay.repaid > 0 && `${money(repay.repaid)} to repaying ${repay.to.join(" & ")} · you keep ${money(repay.ownerKeeps)} · `}
               <Link to="/admin/profit" className="text-gold hover:text-gold-light">
                 See the split →
               </Link>
@@ -96,6 +98,8 @@ export default function Overview() {
           }
         />
       </div>
+
+      <RepaymentCard className="mt-4" />
 
       <div className="mt-4 grid gap-4 xl:grid-cols-2 [&>*]:min-w-0">
         <Card>

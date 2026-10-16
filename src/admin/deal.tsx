@@ -36,6 +36,14 @@ export function firstDay(deal: Deal, sales: Sale[]) {
   return sales.reduce((min, s) => (s.date < min ? s.date : min), isoDay());
 }
 
+/** The last day the numbers run to: the latest sale (so a statement ends where the sales do), else today. */
+export function lastDay(deal: Deal, sales: Sale[]) {
+  const latest = sales.reduce((max, s) => (s.date > max ? s.date : max), "");
+  if (!latest) return isoDay();
+  const start = firstDay(deal, sales);
+  return latest < start ? start : latest;
+}
+
 export function periodFor(key: PeriodKey, deal: Deal, sales: Sale[], custom: { start: string; end: string }): Period {
   const today = new Date();
   const end = isoDay(today);
@@ -54,12 +62,12 @@ export function periodFor(key: PeriodKey, deal: Deal, sales: Sale[], custom: { s
       return { key, start: isoDay(new Date(y, 0, 1)), end, label: "Year to date" };
     case "custom": {
       const start = custom.start || firstDay(deal, sales);
-      const stop = custom.end && custom.end >= start ? custom.end : end;
+      const stop = custom.end && custom.end >= start ? custom.end : lastDay(deal, sales);
       return { key, start, end: stop, label: `${fmtDayYear(start)} – ${fmtDayYear(stop)}` };
     }
     default: {
       const start = firstDay(deal, sales);
-      return { key: "cumulative", start, end, label: `Cumulative since ${fmtDayYear(start)}` };
+      return { key: "cumulative", start, end: lastDay(deal, sales), label: `Cumulative since ${fmtDayYear(start)}` };
     }
   }
 }
@@ -140,6 +148,7 @@ interface PartnerDraft {
   role: string;
   investment: string;
   owner?: boolean;
+  repayable: string;
   createdAt: number;
   custom: string;
 }
@@ -163,7 +172,7 @@ function DealForm({ onClose }: { onClose: () => void }) {
     splitScope: deal.splitScope,
   });
   const [rows, setRows] = useState<PartnerDraft[]>(() =>
-    partners.map((p) => ({ ...p, investment: String(p.investment || ""), custom: String(deal.customShares[p.id] ?? "") })),
+    partners.map((p) => ({ ...p, investment: String(p.investment || ""), repayable: String(p.repayable || ""), custom: String(deal.customShares[p.id] ?? "") })),
   );
   const [error, setError] = useState("");
   const totalInvested = rows.reduce((a, r) => a + (Number(r.investment) || 0), 0);
@@ -178,8 +187,17 @@ function DealForm({ onClose }: { onClose: () => void }) {
     if (!Number.isFinite(price) || price < 0) return setError("Enter the cover price.");
     if (!Number.isFinite(share) || share < 0 || share > 100) return setError("Distributor share is a percent between 0 and 100.");
     if (rows.some((r) => r.investment !== "" && (!Number.isFinite(Number(r.investment)) || Number(r.investment) < 0))) return setError("Investments must be 0 or more.");
+    if (rows.some((r) => r.repayable !== "" && (!Number.isFinite(Number(r.repayable)) || Number(r.repayable) < 0))) return setError("Amounts to repay must be 0 or more.");
     if (form.splitBy === "custom" && Math.abs(customTotal - 100) > 0.01) return setError(`Custom shares add up to ${customTotal}% — they need to total 100%.`);
-    const next: Partner[] = rows.map((r) => ({ id: r.id, name: r.name.trim(), role: r.role.trim(), investment: Number(r.investment) || 0, owner: r.owner, createdAt: r.createdAt }));
+    const next: Partner[] = rows.map((r) => ({
+      id: r.id,
+      name: r.name.trim(),
+      role: r.role.trim(),
+      investment: Number(r.investment) || 0,
+      owner: r.owner,
+      repayable: r.owner ? 0 : Number(r.repayable) || 0,
+      createdAt: r.createdAt,
+    }));
     partnersStore.set(next);
     dealStore.set((d) => ({
       ...d,
@@ -252,6 +270,12 @@ function DealForm({ onClose }: { onClose: () => void }) {
                 <div className="mt-3 grid grid-cols-2 gap-3">
                   <Input aria-label="Role" value={r.role} onChange={(e) => setRow(i, { role: e.target.value })} placeholder="Role (Author, Publisher…)" />
                   <Input aria-label="Investment" type="number" min={0} step="0.01" value={r.investment} onChange={(e) => setRow(i, { investment: e.target.value })} placeholder="Investment" />
+                  {!r.owner && (
+                    <label className="col-span-2 block">
+                      <span className="mb-1.5 block text-xs text-haze">Total investment you repay from your share of the profit (optional)</span>
+                      <Input type="number" min={0} step="0.01" value={r.repayable} onChange={(e) => setRow(i, { repayable: e.target.value })} placeholder="e.g. 17500" />
+                    </label>
+                  )}
                   {form.splitBy === "custom" && (
                     <Input aria-label="Profit share (%)" className="col-span-2" type="number" min={0} max={100} step="0.5" value={r.custom} onChange={(e) => setRow(i, { custom: e.target.value })} placeholder="Profit share %" />
                   )}
@@ -259,7 +283,7 @@ function DealForm({ onClose }: { onClose: () => void }) {
               </div>
             ))}
           </div>
-          <Button size="sm" variant="ghost" className="mt-2" onClick={() => setRows((rs) => [...rs, { id: uid("p_"), name: "", role: "", investment: "", custom: "", createdAt: Date.now() }])}>
+          <Button size="sm" variant="ghost" className="mt-2" onClick={() => setRows((rs) => [...rs, { id: uid("p_"), name: "", role: "", investment: "", repayable: "", custom: "", createdAt: Date.now() }])}>
             <Plus className="h-4 w-4" /> Add partner
           </Button>
         </section>

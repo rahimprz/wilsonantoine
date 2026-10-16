@@ -94,16 +94,18 @@ Pages:
   revenue per copy, profit distribution by partner, payments made and what's still outstanding, and an
   outlook (investment recovered, break-even copies, profit if every printed copy sells). The deal —
   publisher, cover price, distributor share, partners and investments, split by investment or custom
-  percentages, printed-only or every format — is edited here.
+  percentages, printed-only or every format — is edited here. A partner can also have a total
+  investment that Dr. Antoine repays from his share of the profit (Jinnx Book Press's $17,500): until
+  it is repaid, his profit share goes to that partner, and the Overview, balances and statements show
+  what has been repaid and what is left.
 - **Print & stock** — print runs (copies, cost per copy, printer), copies left per format with a
   low-stock alert, review copies given away, stock value at cost, and a reprint planner.
 - **Statements** — generates the report itself for any period, in the publisher's layout (sections
-  01–06). Print it or save it as a PDF, download the figures as CSV, and keep issued statements on
-  file; a statement on file keeps its figures as issued and flags it if sales for that period change.
-- **Pipeline** — kanban for bulk/institutional deals (bookstores, libraries, churches, hospices,
-  events, media). Drag between stages; moving one to *Won* offers to record the sale. Follow-up dates
-  surface on the overview, overdue ones in red.
-- **Sales reps** — copies, revenue, commission owed, monthly target progress and win rate per rep;
+  01–06, plus *Investment Repayment* when a repayment is set). A cumulative report runs to the latest
+  sale and is dated that day unless another report date is picked. Print it or save it as a PDF,
+  download the figures as CSV, and keep issued statements on file; a statement on file keeps its
+  figures as issued and flags it if sales for that period change.
+- **Sales reps** — copies, revenue, commission owed and monthly target progress per rep;
   one-click commission statement (CSV) for the selected period.
 - **Subscribers** — newsletter sign-ups from the site; copy all emails or export CSV.
 - **Website** — edit every section of the public site: copy, images, videos, chapters, reviews, buy

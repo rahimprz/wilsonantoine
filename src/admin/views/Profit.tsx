@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Check, CircleDollarSign, FileText, HandCoins, Package, Pencil, Plus, Settings2, Trash2, Users } from "lucide-react";
 import { useStore } from "../../lib/store";
 import { fmtDayYear, num, pct, sharePct } from "../../lib/format";
-import { distribution, ledger, outlook, perCopy, printing, salesIn, stock } from "../../lib/profit";
+import { distribution, ledger, outlook, perCopy, printing, repayment, salesIn, stock } from "../../lib/profit";
 import { dealStore, partnersStore, payoutsStore, printRunsStore, salesStore } from "../../data/stores";
 import type { Payout } from "../../data/types";
 import { useAdmin } from "../context";
@@ -82,6 +82,7 @@ export default function Profit() {
     { done: runs.length > 0, label: "Add the print run (copies and cost per copy)", action: () => setRunOpen(true), cta: "Add print run" },
     { done: sales.some((s) => p.isPrinted(s.format)), label: "Record copies sold (one entry per statement is fine)", to: "/admin/sales", cta: "Go to sales" },
   ];
+  const repaying = toDate.lines.some((x) => x.repayment !== 0);
   const sortedPayouts = [...payouts].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
   const partnerName = (id: string) => partners.find((x) => x.id === id)?.name ?? "Former partner";
 
@@ -317,6 +318,8 @@ export default function Profit() {
         </Card>
       </div>
 
+      <RepaymentCard className="mt-4" onEdit={() => setDealOpen(true)} />
+
       {/* payments */}
       <Card className="mt-4">
         <NumberedHeader
@@ -333,13 +336,28 @@ export default function Profit() {
             <div key={line.partner.id} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
               <div className="flex items-center justify-between gap-2">
                 <p className="truncate font-medium text-star">{line.partner.name}</p>
-                {line.balance > 0.005 ? <Badge tone={line.partner.owner ? "gold" : "neutral"}>Outstanding {money(line.balance)}</Badge> : <Badge tone="good">Settled</Badge>}
+                {line.balance > 0.005 ? (
+                  <Badge tone={line.partner.owner ? "gold" : "neutral"}>Outstanding {money(line.balance)}</Badge>
+                ) : line.repayment < 0 ? (
+                  <Badge tone="neutral">Goes to repayment</Badge>
+                ) : (
+                  <Badge tone="good">Settled</Badge>
+                )}
               </div>
-              <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
+              <dl className={`mt-3 grid gap-2 text-xs ${repaying ? "grid-cols-4" : "grid-cols-3"}`}>
                 <div>
                   <dt className="text-haze">Earned</dt>
                   <dd className="mt-0.5 text-[0.95rem] text-star tabular-nums">{money(line.earned)}</dd>
                 </div>
+                {repaying && (
+                  <div>
+                    <dt className="text-haze">{line.repayment < 0 ? "To repayment" : "Repayment"}</dt>
+                    <dd className="mt-0.5 text-[0.95rem] text-star tabular-nums">
+                      {line.repayment < 0 ? "−" : line.repayment > 0 ? "+" : ""}
+                      {money(Math.abs(line.repayment))}
+                    </dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-haze">Paid</dt>
                   <dd className="mt-0.5 text-[0.95rem] text-star tabular-nums">{money(line.paidProfit)}</dd>
@@ -476,6 +494,55 @@ export default function Profit() {
       <PrintRunEditor open={runOpen} onClose={() => setRunOpen(false)} />
       <PayoutEditor open={payout.open} payout={payout.record} partnerId={payout.partnerId} onClose={() => setPayout({ open: false })} />
     </div>
+  );
+}
+
+/** The partner investment being paid back out of the owner's share of the profit, to date. */
+export function RepaymentCard({ className = "", onEdit }: { className?: string; onEdit?: () => void }) {
+  const deal = useStore(dealStore);
+  const partners = useStore(partnersStore);
+  const runs = useStore(printRunsStore);
+  const sales = useStore(salesStore);
+  const { money } = useAdmin();
+  const p = useMemo(() => printing(runs), [runs]);
+  const r = repayment(partners, deal, sales, p);
+  if (r.total <= 0) return null;
+  const to = r.to.join(" & ");
+  const done = r.remaining <= 0.005;
+  return (
+    <Card className={className}>
+      <NumberedHeader
+        title={`${to} investment`}
+        subtitle="Repaid from your share of the profit until it's paid back in full"
+        action={
+          onEdit && (
+            <IconButton label="Edit the amount to repay" onClick={onEdit}>
+              <Pencil className="h-4 w-4" />
+            </IconButton>
+          )
+        }
+      />
+      <div className="grid gap-6 px-5 pt-3 pb-6 md:grid-cols-3 md:px-6">
+        <div>
+          <p className="text-sm text-mist">Total invested</p>
+          <p className="mt-1 font-heading text-[1.9rem] leading-tight text-white tabular-nums">{money(r.total)}</p>
+          <p className="mt-1 text-xs text-haze">by {to}</p>
+        </div>
+        <div>
+          <p className="text-sm text-mist">Repaid so far</p>
+          <p className="mt-1 font-heading text-[1.9rem] leading-tight text-gold-light tabular-nums">{money(r.repaid)}</p>
+          <div className="mt-2">
+            <Progress value={r.progress} label={`${to} investment repaid`} />
+          </div>
+          <p className="mt-1.5 text-xs text-haze">{pct(r.progress, 1)} repaid from your profit</p>
+        </div>
+        <div>
+          <p className="text-sm text-mist">Left to repay</p>
+          <p className="mt-1 font-heading text-[1.9rem] leading-tight text-white tabular-nums">{money(r.remaining)}</p>
+          <p className="mt-1 text-xs text-haze">{done ? "Paid back in full — your profit share is yours again." : `Until then your profit share goes to ${to}.`}</p>
+        </div>
+      </div>
+    </Card>
   );
 }
 

@@ -210,7 +210,7 @@ export default function Settings({ onLock }: { onLock: () => void }) {
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-400/20 bg-red-500/[0.05] p-4">
           <div>
             <p className="text-sm font-medium text-red-200">Erase everything</p>
-            <p className="text-xs text-haze">Deletes all sales, reps, pipeline, subscribers and website edits {account ? "from the database" : "on this device"}.</p>
+            <p className="text-xs text-haze">Deletes all sales, reps, subscribers and website edits {account ? "from the database" : "on this device"}.</p>
           </div>
           <Button variant="danger" onClick={() => setErase(true)}>
             <Trash2 className="h-4 w-4" /> Erase…
