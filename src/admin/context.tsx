@@ -27,9 +27,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const { currency } = useStore(settingsStore);
   const [rangeKey, setKey] = useState<RangeKey>(() => {
     try {
-      return (localStorage.getItem(RANGE_KEY) as RangeKey) || "30d";
+      // sales often arrive as one entry per publisher statement, so the whole history is the useful default
+      return (localStorage.getItem(RANGE_KEY) as RangeKey) || "all";
     } catch {
-      return "30d";
+      return "all";
     }
   });
   const setRangeKey = useCallback((k: RangeKey) => {

@@ -408,3 +408,36 @@ html.lenis body {
 @keyframes spin-rev {
   to { transform: rotate(-360deg); }
 }
+
+/* statements print as a clean document: only the report, on white, with sections kept whole */
+@media print {
+  @page {
+    margin: 14mm 12mm;
+  }
+  html,
+  body,
+  #root > div {
+    background: #fff !important;
+    color-scheme: light !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  .print-doc,
+  .print-doc * {
+    visibility: visible !important;
+  }
+  .print-doc {
+    position: absolute;
+    inset: 0 0 auto 0;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .print-doc section {
+    break-inside: avoid;
+  }
+}

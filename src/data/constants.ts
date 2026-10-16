@@ -3,6 +3,7 @@ import type { LeadStage } from "./types";
 export const FORMATS = ["Kindle eBook", "Paperback", "Hardcover", "Audiobook"] as const;
 
 export const CHANNELS = [
+  "Distributor",
   "Amazon",
   "Barnes & Noble",
   "Apple Books",
@@ -10,8 +11,17 @@ export const CHANNELS = [
   "Website (direct)",
   "Event / signing",
   "Bulk / institutional",
+  "Complimentary copy",
   "Other",
 ] as const;
+
+/** Channels where Dr. Antoine sells himself, so no distributor takes a share. */
+export const DIRECT_CHANNELS = ["Website (direct)", "Event / signing", "Bulk / institutional", "Complimentary copy"];
+
+/** Copies given away (review copies, gifts): they leave stock and cost printing, but bring no revenue. */
+export const GIVEAWAY_CHANNEL = "Complimentary copy";
+
+export const PAYOUT_METHODS = ["Bank transfer", "Check", "Zelle", "PayPal", "Cash", "Other"];
 
 export const LEAD_TYPES = [
   "Bookstore",
@@ -38,11 +48,14 @@ export const STAGE_LABEL: Record<LeadStage, string> = Object.fromEntries(STAGES.
   string
 >;
 
-/** Starting royalty assumptions (percent of list price kept). Editable in Settings. */
+/**
+ * Percent of the sale price received after the retailer's share, for formats sold outside the
+ * printing deal (eBooks, audio). Printed copies use the distributor share set on the Profit page.
+ */
 export const DEFAULT_ROYALTY: Record<string, number> = {
   "Kindle eBook": 70,
-  Paperback: 40,
-  Hardcover: 35,
+  Paperback: 60,
+  Hardcover: 60,
   Audiobook: 40,
 };
 

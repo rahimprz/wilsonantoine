@@ -107,12 +107,84 @@ export interface Sale {
   format: string;
   quantity: number;
   unitPrice: number;
-  /** Earnings after the retailer's cut. Filled from the format's royalty rate, editable per sale. */
+  /** Net revenue received: what's left after the distributor/retailer takes its share. Editable per sale. */
   net: number;
+  /** Printing cost of these copies (copies × cost per copy for printed formats, 0 for eBooks). */
+  cost?: number;
   repId: string; // "" when unassigned
   customer: string;
   notes: string;
   demo?: boolean;
+  createdAt: number;
+}
+
+// ---------------------------------------------------------------- the publishing deal
+
+/** Someone who put money into the book and shares in its profit (Dr. Antoine, the publisher…). */
+export interface Partner {
+  id: string;
+  name: string;
+  role: string;
+  investment: number;
+  /** The dashboard's owner — receives 100% of any profit outside the shared split. */
+  owner?: boolean;
+  createdAt: number;
+}
+
+export interface PrintRun {
+  id: string;
+  date: string; // YYYY-MM-DD
+  format: string; // "Paperback"
+  quantity: number;
+  unitCost: number; // printing cost per copy
+  printer: string;
+  notes: string;
+  demo?: boolean;
+  createdAt: number;
+}
+
+export type PayoutKind = "profit" | "capital";
+
+/** Money actually paid out to a partner — profit distributions or investment returned. */
+export interface Payout {
+  id: string;
+  date: string;
+  partnerId: string;
+  kind: PayoutKind;
+  amount: number;
+  method: string;
+  reference: string;
+  notes: string;
+  demo?: boolean;
+  createdAt: number;
+}
+
+export interface Deal {
+  publisher: string;
+  /** First day of sales; statements run "cumulative" from here. */
+  startDate: string;
+  /** Cover price of a printed copy. */
+  listPrice: number;
+  /** Percent of the cover price the distribution vendor keeps on printed copies. */
+  vendorShare: number;
+  splitBy: "investment" | "custom";
+  customShares: Record<string, number>; // partnerId -> percent
+  /** "printed": the split covers printed copies, other formats go to the owner. "all": every sale is shared. */
+  splitScope: "printed" | "all";
+  lowStockAt: number;
+}
+
+/** A sales & profit distribution statement that was issued (by this dashboard or by the publisher). */
+export interface Statement {
+  id: string;
+  number: string;
+  issuedOn: string;
+  start: string;
+  end: string;
+  source: "dashboard" | "publisher";
+  notes: string;
+  /** Figures as issued, so history doesn't shift when later sales are edited. */
+  snapshot?: { units: number; gross: number; vendor: number; net: number; cost: number; profit: number; shares: { name: string; investment: number; profit: number }[] };
   createdAt: number;
 }
 

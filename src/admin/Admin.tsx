@@ -3,6 +3,9 @@ import { NavLink, Route, Routes, useLocation } from "react-router-dom";
 import {
   BookOpen,
   ExternalLink,
+  FileText,
+  HandCoins,
+  Package,
   Globe,
   KeyRound,
   LayoutDashboard,
@@ -21,10 +24,14 @@ import { resolveMedia } from "../lib/media";
 import { clearDemoData, hasDemoData } from "../data/demo";
 import { contentStore, eventsStore, leadsStore, repsStore, salesStore, settingsStore, subscribersStore } from "../data/stores";
 import { primaryRetailer } from "../site/buy";
+import { applySealedSeed } from "../data/seed";
 import { AdminProvider } from "./context";
 import { Button, FeedbackProvider, Input, useFeedback } from "./ui";
 import Overview from "./views/Overview";
 import Sales from "./views/Sales";
+import Profit from "./views/Profit";
+import Inventory from "./views/Inventory";
+import Statements from "./views/Statements";
 import Pipeline from "./views/Pipeline";
 import Reps from "./views/Reps";
 import Subscribers from "./views/Subscribers";
@@ -34,6 +41,9 @@ import Settings from "./views/Settings";
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/admin/sales", label: "Sales", icon: Receipt },
+  { to: "/admin/profit", label: "Profit & split", icon: HandCoins },
+  { to: "/admin/inventory", label: "Print & stock", icon: Package },
+  { to: "/admin/statements", label: "Statements", icon: FileText },
   { to: "/admin/pipeline", label: "Pipeline", icon: SquareKanban },
   { to: "/admin/reps", label: "Sales reps", icon: UsersRound },
   { to: "/admin/subscribers", label: "Subscribers", icon: Mail },
@@ -109,8 +119,13 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     }
     setBusy(true);
     const hash = await hashPasscode(pass, settings.passSalt);
+    if (hash === settings.passHash) {
+      // first unlock in this browser: bring in the publisher statement's figures (sealed with the passcode)
+      await applySealedSeed(pass);
+      setBusy(false);
+      return onUnlock();
+    }
     setBusy(false);
-    if (hash === settings.passHash) return onUnlock();
     const n = fails + 1;
     setFails(n);
     setPass("");
@@ -311,6 +326,9 @@ function Shell({ onLock }: { onLock: () => void }) {
           <Routes>
             <Route index element={<Overview />} />
             <Route path="sales" element={<Sales />} />
+            <Route path="profit" element={<Profit />} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="statements" element={<Statements />} />
             <Route path="pipeline" element={<Pipeline />} />
             <Route path="reps" element={<Reps />} />
             <Route path="subscribers" element={<Subscribers />} />

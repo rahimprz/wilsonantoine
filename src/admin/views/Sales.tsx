@@ -1,12 +1,13 @@
 import { useMemo, useRef, useState } from "react";
 import { ArrowDownUp, Copy, Download, FileDown, Pencil, Plus, Receipt, Search, Trash2, Upload } from "lucide-react";
 import { useStore } from "../../lib/store";
-import { gross, inRange, totals } from "../../lib/metrics";
+import { gross, inRange } from "../../lib/metrics";
+import { costOf, ledger, printing, profitOf, vendorShareFor } from "../../lib/profit";
 import { fmtDayYear, isoDay, num } from "../../lib/format";
 import { download, parseCSV, toCSV } from "../../lib/csv";
 import { uid } from "../../lib/id";
 import { CHANNELS, FORMATS } from "../../data/constants";
-import { repsStore, salesStore, settingsStore } from "../../data/stores";
+import { dealStore, printRunsStore, repsStore, salesStore, settingsStore } from "../../data/stores";
 import type { Sale } from "../../data/types";
 import { useAdmin } from "../context";
 import { RangePicker, SaleEditor } from "../components";
@@ -20,7 +21,10 @@ const COLUMNS = [
   { key: "quantity", label: "quantity" },
   { key: "unitPrice", label: "unit_price" },
   { key: "gross", label: "gross" },
+  { key: "vendor", label: "distributor_share" },
   { key: "net", label: "net" },
+  { key: "cost", label: "printing_cost" },
+  { key: "profit", label: "profit" },
   { key: "rep", label: "rep" },
   { key: "customer", label: "customer" },
   { key: "notes", label: "notes" },
@@ -30,6 +34,9 @@ export default function Sales() {
   const sales = useStore(salesStore);
   const reps = useStore(repsStore);
   const settings = useStore(settingsStore);
+  const deal = useStore(dealStore);
+  const runs = useStore(printRunsStore);
+  const p = useMemo(() => printing(runs), [runs]);
   const { range, money } = useAdmin();
   const { toast, confirm } = useFeedback();
   const [query, setQuery] = useState("");
@@ -58,7 +65,7 @@ export default function Sales() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sales, range, channel, format, rep, query, sort, reps]);
 
-  const sum = totals(rows);
+  const sum = ledger(rows);
 
   const remove = async (s: Sale) => {
     if (!(await confirm({ title: "Delete this sale?", body: `${s.quantity} × ${s.format} on ${fmtDayYear(s.date)} (${money(gross(s))}).`, confirmLabel: "Delete", danger: true }))) return;
@@ -67,7 +74,7 @@ export default function Sales() {
   };
 
   const exportCSV = () => {
-    const data = rows.map((s) => ({ ...s, gross: gross(s).toFixed(2), rep: repName(s.repId) }));
+    const data = rows.map((s) => ({ ...s, gross: gross(s).toFixed(2), vendor: (gross(s) - s.net).toFixed(2), cost: costOf(s).toFixed(2), profit: profitOf(s).toFixed(2), rep: repName(s.repId) }));
     download(`wilson-antoine-sales-${range.start}-to-${range.end}.csv`, toCSV(data, COLUMNS));
     toast(`Exported ${num(rows.length)} sales`);
   };
@@ -87,7 +94,8 @@ export default function Sales() {
       format: col("format", "edition", "type"),
       qty: col("quantity", "qty", "units", "copies"),
       price: col("unit_price", "price", "list_price"),
-      net: col("net", "royalty", "earnings"),
+      net: col("net", "royalty", "earnings", "net_revenue"),
+      cost: col("printing_cost", "cost", "print_cost"),
       rep: col("rep", "sales_rep"),
       customer: col("customer", "buyer", "event"),
       notes: col("notes", "note"),
@@ -119,7 +127,8 @@ export default function Sales() {
         format: fmt,
         quantity: Math.round(quantity),
         unitPrice,
-        net: netRaw ? Number(netRaw) : +(quantity * unitPrice * ((settings.royaltyRates[fmt] ?? 100) / 100)).toFixed(2),
+        net: netRaw ? Number(netRaw) : +(quantity * unitPrice * (1 - vendorShareFor(fmt, cell("channel") || "Other", deal, settings.royaltyRates, p) / 100)).toFixed(2),
+        cost: cell("cost") ? Number(cell("cost").replace(/[^0-9.-]/g, "")) || 0 : +(Math.round(quantity) * p.unitCost(fmt)).toFixed(2),
         repId: repMatch?.id ?? "",
         customer: cell("customer"),
         notes: cell("notes"),
@@ -143,7 +152,7 @@ export default function Sales() {
     <div>
       <PageHeader
         title="Sales"
-        subtitle="Every copy sold — from Amazon royalties to event signings and bulk orders."
+        subtitle="Every copy sold — distributor statements, Amazon royalties, event signings and bulk orders — with what each one earned."
         actions={
           <>
             <RangePicker />
@@ -214,12 +223,12 @@ export default function Sales() {
             ))}
           </Select>
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[
-            ["Sales", num(sum.orders)],
-            ["Copies", num(sum.units)],
-            ["Gross", money(sum.gross)],
-            ["Net earnings", money(sum.net)],
+            ["Copies sold", num(sum.units) + (sum.givenAway ? ` (+${num(sum.givenAway)} free)` : "")],
+            ["Sales revenue", money(sum.gross)],
+            ["Net received", money(sum.net)],
+            ["Net profit", money(sum.profit)],
           ].map(([l, v]) => (
             <div key={l} className="rounded-xl bg-white/[0.03] px-4 py-3">
               <p className="text-xs text-haze">{l}</p>
@@ -246,7 +255,7 @@ export default function Sales() {
           </EmptyState>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[860px] text-sm">
+            <table className="w-full min-w-[1040px] text-sm">
               <thead className="bg-white/[0.02] text-left text-xs text-haze">
                 <tr>
                   <th className="px-5 py-3 font-medium">{sortHeader("date", "Date")}</th>
@@ -254,8 +263,10 @@ export default function Sales() {
                   <th className="px-3 py-3 font-medium">Channel</th>
                   <th className="px-3 py-3 font-medium">Rep</th>
                   <th className="px-3 py-3 font-medium">Customer / notes</th>
-                  <th className="px-3 py-3 text-right font-medium">{sortHeader("gross", "Gross", "justify-end")}</th>
-                  <th className="px-3 py-3 text-right font-medium">Net</th>
+                  <th className="px-3 py-3 text-right font-medium">{sortHeader("gross", "Revenue", "justify-end")}</th>
+                  <th className="px-3 py-3 text-right font-medium">Net received</th>
+                  <th className="px-3 py-3 text-right font-medium">Printing</th>
+                  <th className="px-3 py-3 text-right font-medium">Profit</th>
                   <th className="px-3 py-3" />
                 </tr>
               </thead>
@@ -278,6 +289,8 @@ export default function Sales() {
                     </td>
                     <td className="px-3 py-3 text-right font-medium text-star">{money(gross(s))}</td>
                     <td className="px-3 py-3 text-right text-mist">{money(s.net)}</td>
+                    <td className="px-3 py-3 text-right text-mist">{costOf(s) ? money(costOf(s)) : <span className="text-haze">—</span>}</td>
+                    <td className={`px-3 py-3 text-right font-medium ${profitOf(s) < 0 ? "text-[#ff9a9a]" : "text-gold-light"}`}>{money(profitOf(s))}</td>
                     <td className="px-3 py-3">
                       <div className="flex justify-end gap-0.5 opacity-70 transition group-hover:opacity-100">
                         <IconButton label="Edit sale" onClick={() => setEditing(s)}>
@@ -314,10 +327,10 @@ export default function Sales() {
 
       <p className="mt-4 flex flex-wrap items-center gap-2 text-xs text-haze">
         <FileDown className="h-4 w-4" />
-        CSV import reads columns named date, channel, format, quantity, unit_price, net, rep, customer, notes — the same layout Export produces.
+        CSV import reads columns named date, channel, format, quantity, unit_price, net, printing_cost, rep, customer, notes — the same layout Export produces. Missing net and printing cost are filled in from the deal.
         <button
           className="text-gold hover:underline"
-          onClick={() => download("sales-template.csv", toCSV([{ date: isoDay(), channel: "Amazon", format: "Kindle eBook", quantity: 1, unitPrice: 9.99, gross: 9.99, net: 6.99, rep: "", customer: "", notes: "" }], COLUMNS))}
+          onClick={() => download("sales-template.csv", toCSV([{ date: isoDay(), channel: "Distributor", format: "Paperback", quantity: 10, unitPrice: 25, gross: 250, vendor: 100, net: 150, cost: 100, profit: 50, rep: "", customer: "", notes: "" }], COLUMNS))}
         >
           Download a template
         </button>

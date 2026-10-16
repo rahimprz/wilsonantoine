@@ -4,10 +4,11 @@ import { ArrowRight, ArrowUpRight, BookOpen, PencilLine, CalendarClock, MousePoi
 import { useStore } from "../../lib/store";
 import { engagement, groupBy, inRange, monthPace, pipeline, repStats, series, totals, delta, grainFor } from "../../lib/metrics";
 import { fmtDay, greeting, num, pct, relativeDays } from "../../lib/format";
-import { contentStore, eventsStore, leadsStore, repsStore, salesStore, settingsStore, subscribersStore } from "../../data/stores";
+import { contentStore, dealStore, eventsStore, leadsStore, partnersStore, payoutsStore, printRunsStore, repsStore, salesStore, settingsStore, subscribersStore } from "../../data/stores";
 import { loadDemoData } from "../../data/demo";
 import { STAGE_LABEL } from "../../data/constants";
 import { resolveMedia } from "../../lib/media";
+import { distribution, ledger, printing, stock } from "../../lib/profit";
 import { primaryRetailer } from "../../site/buy";
 import { useAdmin } from "../context";
 import { BarList, Progress, TrendChart, VIZ } from "../charts";
@@ -21,6 +22,10 @@ export default function Overview() {
   const events = useStore(eventsStore);
   const subscribers = useStore(subscribersStore);
   const settings = useStore(settingsStore);
+  const deal = useStore(dealStore);
+  const partners = useStore(partnersStore);
+  const runs = useStore(printRunsStore);
+  const payouts = useStore(payoutsStore);
   const { range, rangeKey, money } = useAdmin();
   const { toast } = useFeedback();
   const [recording, setRecording] = useState(false);
@@ -29,7 +34,14 @@ export default function Overview() {
   const current = useMemo(() => sales.filter((s) => inRange(s.date, range.start, range.end)), [sales, range]);
   const previous = useMemo(() => sales.filter((s) => inRange(s.date, range.prevStart, range.prevEnd)), [sales, range]);
   const t = totals(current);
-  const p = totals(previous);
+  const l = ledger(current);
+  const lp = ledger(previous);
+  const printed = useMemo(() => printing(runs), [runs]);
+  const ownerShare = (list: typeof sales) => distribution(partners, deal, list, [], printed).lines.find((x) => x.partner.owner)?.earned ?? 0;
+  const myShare = ownerShare(current);
+  const myPrevShare = ownerShare(previous);
+  const toDate = distribution(partners, deal, sales, payouts, printed).lines.find((x) => x.partner.owner);
+  const inStock = runs.length ? stock(runs, sales).reduce((a, f) => a + f.remaining, 0) : null;
   const buckets = useMemo(() => series(sales, range.start, range.end), [sales, range]);
   const grain = grainFor(range.days);
   const formats = groupBy(current, "format");
@@ -42,9 +54,8 @@ export default function Overview() {
   const recent = [...sales].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 6);
   const repName = (id: string) => reps.find((r) => r.id === id)?.name ?? "—";
 
-  const spark = (key: "gross" | "net" | "units") => buckets.map((b) => b[key]);
+  const spark = (key: "gross" | "net" | "profit" | "units") => buckets.map((b) => b[key]);
   const empty = sales.length === 0;
-  const allTime = totals(sales);
 
   return (
     <div>
@@ -61,7 +72,14 @@ export default function Overview() {
         }
       />
 
-      <BookBanner copies={allTime.units} earnings={money(allTime.net)} clicks={eng.buy_click} readers={subscribers.length} />
+      <BookBanner
+        stats={[
+          { label: "Copies sold, all time", value: num(ledger(sales).units) },
+          { label: "Net profit, all time", value: money(ledger(sales).profit) },
+          { label: "Your share, all time", value: money(toDate?.earned ?? 0), hint: toDate && toDate.balance > 0.005 ? `${money(toDate.balance)} still due` : undefined },
+          inStock != null ? { label: "Copies in stock", value: num(inStock), hint: inStock <= deal.lowStockAt ? "Low — time to reprint?" : undefined } : { label: "Newsletter readers", value: num(subscribers.length) },
+        ]}
+      />
 
       {empty && (
         <Card className="mb-6 overflow-hidden">
@@ -91,10 +109,10 @@ export default function Overview() {
       )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Kpi label="Gross revenue" value={money(t.gross)} change={delta(t.gross, p.gross)} spark={spark("gross")} sparkColor={VIZ.gold} />
-        <Kpi label="Your earnings (net)" value={money(t.net)} change={delta(t.net, p.net)} spark={spark("net")} sparkColor={VIZ.blue} />
-        <Kpi label="Copies sold" value={num(t.units)} change={delta(t.units, p.units)} spark={spark("units")} sparkColor={VIZ.gold} />
-        <Kpi label="Avg. order value" value={money(t.aov)} change={delta(t.aov, p.aov)} hint={`${num(t.orders)} orders`} />
+        <Kpi label="Copies sold" value={num(l.units)} change={delta(l.units, lp.units)} spark={spark("units")} sparkColor={VIZ.gold} hint={l.givenAway ? `+ ${num(l.givenAway)} given away` : undefined} />
+        <Kpi label="Sales revenue" value={money(l.gross)} change={delta(l.gross, lp.gross)} spark={spark("gross")} sparkColor={VIZ.gold} hint={`${money(l.net)} net received`} />
+        <Kpi label="Net profit" value={money(l.profit)} change={delta(l.profit, lp.profit)} spark={spark("profit")} sparkColor={VIZ.blue} hint={`after ${money(l.vendor)} distributor share and ${money(l.cost)} printing`} />
+        <Kpi label="Your share of profit" value={money(myShare)} change={delta(myShare, myPrevShare)} hint={<Link to="/admin/profit" className="text-gold hover:text-gold-light">See the split →</Link>} />
       </div>
 
       <div className="mt-4 grid gap-4 xl:grid-cols-3">
@@ -116,8 +134,8 @@ export default function Overview() {
                     <tr>
                       <th className="py-2 font-medium">Period</th>
                       <th className="py-2 text-right font-medium">Copies</th>
-                      <th className="py-2 text-right font-medium">Gross</th>
-                      <th className="py-2 text-right font-medium">Net</th>
+                      <th className="py-2 text-right font-medium">Revenue</th>
+                      <th className="py-2 text-right font-medium">Net profit</th>
                     </tr>
                   </thead>
                   <tbody className="tabular-nums">
@@ -126,7 +144,7 @@ export default function Overview() {
                         <td className="py-2 text-mist">{b.label}</td>
                         <td className="py-2 text-right">{num(b.units)}</td>
                         <td className="py-2 text-right">{money(b.gross)}</td>
-                        <td className="py-2 text-right">{money(b.net)}</td>
+                        <td className="py-2 text-right">{money(b.profit)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -136,8 +154,8 @@ export default function Overview() {
               <TrendChart
                 labels={buckets.map((b) => b.label)}
                 series={[
-                  { key: "gross", label: "Gross revenue", color: VIZ.gold, values: buckets.map((b) => b.gross), area: true },
-                  { key: "net", label: "Your earnings", color: VIZ.blue, values: buckets.map((b) => b.net) },
+                  { key: "gross", label: "Sales revenue", color: VIZ.gold, values: buckets.map((b) => b.gross), area: true },
+                  { key: "profit", label: "Net profit", color: VIZ.blue, values: buckets.map((b) => b.profit) },
                 ]}
                 format={(v) => money(v)}
                 formatAxis={(v) => money(v, true)}
@@ -155,7 +173,7 @@ export default function Overview() {
           <CardHeader title="This month's goal" subtitle={`Day ${pace.day} of ${pace.daysInMonth}`} action={<Target className="h-5 w-5 text-gold" />} />
           <div className="space-y-6 px-5 pt-5 pb-6 md:px-6">
             <Goal label="Copies" value={pace.units} target={settings.monthlyUnitTarget} projected={pace.projectedUnits} format={num} />
-            <Goal label="Gross revenue" value={pace.gross} target={settings.monthlyRevenueTarget} projected={pace.projectedGross} format={(v) => money(v)} />
+            <Goal label="Sales revenue" value={pace.gross} target={settings.monthlyRevenueTarget} projected={pace.projectedGross} format={(v) => money(v)} />
             <Link to="/admin/settings" className="inline-flex items-center gap-1.5 text-sm text-mist hover:text-gold">
               Adjust targets <ArrowRight className="h-4 w-4" />
             </Link>
@@ -375,16 +393,10 @@ function Goal({ label, value, target, projected, format }: { label: string; valu
 }
 
 /** The book itself, front and centre: cover, where it sells, and its lifetime numbers. */
-function BookBanner({ copies, earnings, clicks, readers }: { copies: number; earnings: string; clicks: number; readers: number }) {
+function BookBanner({ stats }: { stats: { label: string; value: string; hint?: string }[] }) {
   const content = useStore(contentStore);
   const retailer = primaryRetailer(content.buy.retailers);
   const cover = resolveMedia(content.book.cover);
-  const stats = [
-    { label: "Copies recorded", value: num(copies) },
-    { label: "Your earnings, all time", value: earnings },
-    { label: "Clicks to buy (period)", value: num(clicks) },
-    { label: "Newsletter readers", value: num(readers) },
-  ];
   return (
     <div className="relative mb-6 overflow-hidden rounded-2xl border border-gold/20 bg-[radial-gradient(90%_120%_at_10%_50%,#1a2c7a,#0e1430_55%,#0b1029)]">
       <div className="stars-bg pointer-events-none absolute inset-0 opacity-70" />
@@ -422,6 +434,7 @@ function BookBanner({ copies, earnings, clicks, readers }: { copies: number; ear
             <div key={s.label} className="bg-[#0b1029]/85 px-4 py-3">
               <dt className="text-[0.7rem] text-haze">{s.label}</dt>
               <dd className="font-heading mt-0.5 text-[1.35rem] text-star tabular-nums">{s.value}</dd>
+              {s.hint && <dd className="text-[0.68rem] text-gold-light">{s.hint}</dd>}
             </div>
           ))}
         </dl>

@@ -91,6 +91,7 @@ export interface Bucket {
   start: string;
   gross: number;
   net: number;
+  profit: number;
   units: number;
 }
 
@@ -119,7 +120,7 @@ export function series(sales: Sale[], start: string, end: string, grain = grainF
     if (!index.has(key)) {
       const label =
         grain === "month" ? fmtMonth(cursor) : grain === "week" ? `Wk of ${fmtDay(key)}` : fmtDay(isoDay(cursor));
-      const b: Bucket = { key, label, start: isoDay(cursor), gross: 0, net: 0, units: 0 };
+      const b: Bucket = { key, label, start: isoDay(cursor), gross: 0, net: 0, profit: 0, units: 0 };
       index.set(key, b);
       buckets.push(b);
     }
@@ -131,6 +132,7 @@ export function series(sales: Sale[], start: string, end: string, grain = grainF
     if (!b) continue;
     b.gross += gross(s);
     b.net += s.net;
+    b.profit += s.net - (s.cost ?? 0);
     b.units += s.quantity;
   }
   return buckets;

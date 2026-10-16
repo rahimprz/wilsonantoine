@@ -76,7 +76,7 @@ export default function Settings({ onLock }: { onLock: () => void }) {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Settings" subtitle="Targets, royalty assumptions, security and your data." />
+      <PageHeader title="Settings" subtitle="Targets, royalty assumptions, security and your data. The publishing deal itself lives under Profit & split." />
 
       <Section icon={<Sparkles className="h-5 w-5" />} title="Business" description="Used for greetings, money formatting, monthly goals and the default net earnings on each sale.">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -93,7 +93,7 @@ export default function Settings({ onLock }: { onLock: () => void }) {
           <Field label="Monthly target — copies">{(id) => <Input id={id} type="number" min={0} value={form.monthlyUnitTarget} onChange={(e) => setForm({ ...form, monthlyUnitTarget: e.target.value })} />}</Field>
           <Field label="Monthly target — gross revenue">{(id) => <Input id={id} type="number" min={0} value={form.monthlyRevenueTarget} onChange={(e) => setForm({ ...form, monthlyRevenueTarget: e.target.value })} />}</Field>
         </div>
-        <p className="mt-6 mb-3 text-sm font-medium text-star">Royalty you keep, by format (% of list price)</p>
+        <p className="mt-6 mb-3 text-sm font-medium text-star">Net received by format, for sales outside the printing deal (% of the sale price)</p>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {FORMATS.map((f) => (
             <Field key={f} label={f}>
@@ -103,7 +103,7 @@ export default function Settings({ onLock }: { onLock: () => void }) {
             </Field>
           ))}
         </div>
-        <p className="mt-3 text-xs text-haze">These pre-fill each new sale's net earnings; you can always override a single sale. KDP eBooks are typically 70% (or 35%); print royalties depend on printing costs.</p>
+        <p className="mt-3 text-xs text-haze">These pre-fill the net received on eBook and audio sales (KDP eBooks are typically 70% or 35%). Printed copies use the distributor share and printing cost set under Profit & split and Print & stock. Any single sale can be overridden.</p>
         <div className="mt-5">
           <Button variant="primary" onClick={saveBusiness}>
             Save settings

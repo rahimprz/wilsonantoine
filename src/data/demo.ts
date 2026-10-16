@@ -1,8 +1,8 @@
 import { addDays, isoDay } from "../lib/format";
 import { uid } from "../lib/id";
 import { DEFAULT_ROYALTY } from "./constants";
-import { eventsStore, leadsStore, repsStore, salesStore, subscribersStore } from "./stores";
-import type { Lead, LeadStage, Rep, Sale, SiteEvent, Subscriber } from "./types";
+import { eventsStore, leadsStore, payoutsStore, printRunsStore, repsStore, salesStore, subscribersStore } from "./stores";
+import type { Lead, LeadStage, PrintRun, Rep, Sale, SiteEvent, Subscriber } from "./types";
 
 /**
  * Sample records so the dashboard can be explored before real sales are entered.
@@ -20,7 +20,7 @@ function rng(seed: number) {
 }
 
 export function hasDemoData(): boolean {
-  return [salesStore, leadsStore, repsStore, subscribersStore, eventsStore].some((s) =>
+  return [salesStore, leadsStore, repsStore, subscribersStore, eventsStore, printRunsStore, payoutsStore].some((s) =>
     (s.get() as { demo?: boolean }[]).some((r) => r.demo),
   );
 }
@@ -31,6 +31,8 @@ export function clearDemoData() {
   repsStore.set((p) => p.filter((r) => !r.demo));
   subscribersStore.set((p) => p.filter((r) => !r.demo));
   eventsStore.set((p) => p.filter((r) => !r.demo));
+  printRunsStore.set((p) => p.filter((r) => !r.demo));
+  payoutsStore.set((p) => p.filter((r) => !r.demo));
 }
 
 export function loadDemoData() {
@@ -54,8 +56,14 @@ export function loadDemoData() {
 
   // ~150 days of sales with a launch bump and a gentle upward trend
   const sales: Sale[] = [];
-  const formats = ["Kindle eBook", "Paperback", "Hardcover", "Audiobook"] as const;
-  const prices: Record<string, number> = { "Kindle eBook": 9.99, Paperback: 17.99, Hardcover: 26.99, Audiobook: 19.99 };
+  // two demo print runs of the paperback (the second a cheaper reprint), so stock and printing costs have something to draw on
+  const runs: PrintRun[] = [
+    { id: uid("run_"), date: isoDay(addDays(today, -160)), format: "Paperback", quantity: 500, unitCost: 10, printer: "Jinnx Book Press", notes: "Demo — first printing", demo: true, createdAt: now - 160 * 864e5 },
+    { id: uid("run_"), date: isoDay(addDays(today, -60)), format: "Paperback", quantity: 500, unitCost: 9.5, printer: "Jinnx Book Press", notes: "Demo — reprint", demo: true, createdAt: now - 60 * 864e5 },
+  ];
+  const unitCost = 9.75;
+  const formats = ["Paperback", "Kindle eBook"] as const;
+  const prices: Record<string, number> = { "Kindle eBook": 9.99, Paperback: 25 };
   for (let back = 150; back >= 0; back--) {
     const day = addDays(today, -back);
     const launch = back > 120 && back < 135 ? 2.2 : 1;
@@ -63,11 +71,11 @@ export function loadDemoData() {
     const weekend = [0, 6].includes(day.getDay()) ? 1.25 : 1;
     const orders = Math.floor(r() * 3 * trend * launch * weekend);
     for (let o = 0; o < orders; o++) {
-      const format = pick(formats, [55, 28, 9, 8]);
-      const channel = pick(["Amazon", "Barnes & Noble", "Apple Books", "Kobo", "Website (direct)"], [70, 10, 8, 4, 8]);
+      const format = pick(formats, [55, 45]);
+      const channel = format === "Paperback" ? pick(["Distributor", "Website (direct)"], [88, 12]) : pick(["Amazon", "Apple Books", "Kobo"], [80, 12, 8]);
       const quantity = r() < 0.9 ? 1 : 2;
       const unitPrice = prices[format];
-      const rate = channel === "Website (direct)" ? 85 : DEFAULT_ROYALTY[format];
+      const rate = channel === "Website (direct)" ? 100 : format === "Paperback" ? 60 : DEFAULT_ROYALTY[format];
       sales.push({
         id: uid("s_"),
         date: isoDay(day),
@@ -76,6 +84,7 @@ export function loadDemoData() {
         quantity,
         unitPrice,
         net: +(quantity * unitPrice * (rate / 100)).toFixed(2),
+        cost: format === "Paperback" ? quantity * unitCost : 0,
         repId: channel === "Website (direct)" && r() < 0.4 ? reps[2].id : "",
         customer: "",
         notes: "",
@@ -83,18 +92,38 @@ export function loadDemoData() {
         createdAt: day.getTime(),
       });
     }
+    // now and then a few review copies go out
+    if (r() < 0.02) {
+      const quantity = 2 + Math.floor(r() * 4);
+      sales.push({
+        id: uid("s_"),
+        date: isoDay(day),
+        channel: "Complimentary copy",
+        format: "Paperback",
+        quantity,
+        unitPrice: 0,
+        net: 0,
+        cost: quantity * unitCost,
+        repId: "",
+        customer: pick(["Podcast host", "Book reviewer", "Church library", "Grief counsellor"]),
+        notes: "Review copy",
+        demo: true,
+        createdAt: day.getTime(),
+      });
+    }
     // occasional signing events and institutional orders, attributed to reps
     if (r() < 0.05) {
       const rep = pick(reps);
-      const quantity = 8 + Math.floor(r() * 25);
+      const quantity = 6 + Math.floor(r() * 18);
       sales.push({
         id: uid("s_"),
         date: isoDay(day),
         channel: "Event / signing",
         format: "Paperback",
         quantity,
-        unitPrice: 18,
-        net: +(quantity * 18 * 0.55).toFixed(2),
+        unitPrice: 25,
+        net: quantity * 25,
+        cost: quantity * unitCost,
         repId: rep.id,
         customer: pick(["Grace Fellowship signing", "Community library talk", "Wellness expo booth", "Book fair table"]),
         notes: "",
@@ -104,15 +133,16 @@ export function loadDemoData() {
     }
     if (r() < 0.025) {
       const rep = pick(reps);
-      const quantity = 20 + Math.floor(r() * 60);
+      const quantity = 15 + Math.floor(r() * 40);
       sales.push({
         id: uid("s_"),
         date: isoDay(day),
         channel: "Bulk / institutional",
-        format: pick(["Paperback", "Hardcover"]),
+        format: "Paperback",
         quantity,
-        unitPrice: 14,
-        net: +(quantity * 14 * 0.5).toFixed(2),
+        unitPrice: 20,
+        net: quantity * 20,
+        cost: quantity * unitCost,
         repId: rep.id,
         customer: pick(["St. Mary's Hospice", "Riverside Library System", "New Hope Church", "Healing Hearts Grief Group"]),
         notes: "Bulk discount applied",
@@ -178,6 +208,11 @@ export function loadDemoData() {
 
   repsStore.set((p) => [...p, ...reps]);
   salesStore.set((p) => [...p, ...sales]);
+  printRunsStore.set((p) => [...p, ...runs]);
+  payoutsStore.set((p) => [
+    ...p,
+    { id: uid("pay_"), date: isoDay(addDays(today, -40)), partnerId: "p_owner", kind: "profit", amount: 150, method: "Bank transfer", reference: "Demo", notes: "Demo — first profit distribution", demo: true, createdAt: now - 40 * 864e5 },
+  ]);
   leadsStore.set((p) => [...p, ...leads]);
   subscribersStore.set((p) => [...p, ...subscribers]);
   eventsStore.set((p) => [...p, ...events].sort((a, b) => a.t - b.t));

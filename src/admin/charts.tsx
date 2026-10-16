@@ -15,6 +15,10 @@ export const VIZ = {
   muted: "#6f7aa8",
   gold: "#b8862b",
   blue: "#3f86ee",
+  // third slot for part-to-whole splits (distributor · printing · profit). Validated with blue and
+  // gold on #0e1430; the aqua↔gold pair sits in the CVD warn band, so SplitBar always direct-labels
+  // its segments and keeps 2px gaps between them.
+  aqua: "#199e70",
 };
 
 function useWidth<T extends HTMLElement>() {
@@ -238,6 +242,69 @@ export function Progress({ value, color = VIZ.gold, label }: { value: number; co
       <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.06]">
         <div className="h-full rounded-full transition-[width] duration-1000" style={{ width: `${pct * 100}%`, background: color }} />
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- part-to-whole split
+
+export interface SplitSegment {
+  key: string;
+  label: string;
+  value: number;
+  color: string;
+}
+
+/**
+ * One bar cut into its parts (where a sale's money goes). Segments sit 2px apart with rounded outer
+ * ends; each wide-enough segment carries its value, and the legend below names every part with
+ * its value and share, so identity never rests on colour alone.
+ */
+export function SplitBar({ segments, format, height = 26, label }: { segments: SplitSegment[]; format: (v: number) => string; height?: number; label: string }) {
+  const [hover, setHover] = useState<string | null>(null);
+  const parts = segments.filter((s) => s.value > 0);
+  const total = parts.reduce((a, s) => a + s.value, 0);
+  if (total <= 0) return <p className="py-6 text-center text-sm text-haze">Nothing to split yet.</p>;
+  const share = (v: number) => `${Math.round((v / total) * 100)}%`;
+  return (
+    <div>
+      <div className="relative flex w-full gap-[2px]" style={{ height }} role="img" aria-label={`${label}: ${parts.map((s) => `${s.label} ${format(s.value)}`).join(", ")}`}>
+        {parts.map((s, i) => {
+          const w = s.value / total;
+          return (
+            <div
+              key={s.key}
+              className="relative flex min-w-[3px] items-center justify-center transition-opacity duration-300"
+              style={{
+                flexGrow: w,
+                flexBasis: 0,
+                background: s.color,
+                borderRadius: parts.length === 1 ? 4 : i === 0 ? "4px 0 0 4px" : i === parts.length - 1 ? "0 4px 4px 0" : 0,
+                opacity: hover && hover !== s.key ? 0.45 : 1,
+              }}
+              onPointerEnter={() => setHover(s.key)}
+              onPointerLeave={() => setHover(null)}
+            >
+              {w >= 0.12 && <span className="px-1 text-[0.72rem] font-semibold text-white tabular-nums [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">{format(s.value)}</span>}
+              {hover === s.key && (
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 rounded-lg border border-white/10 bg-[#141b3d] px-3 py-2 text-xs whitespace-nowrap text-mist shadow-xl">
+                  <span className="font-medium text-star">{s.label}</span> · {format(s.value)} · {share(s.value)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <ul className="mt-3.5 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+        {parts.map((s) => (
+          <li key={s.key} className="flex items-center gap-2" onPointerEnter={() => setHover(s.key)} onPointerLeave={() => setHover(null)}>
+            <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: s.color }} aria-hidden />
+            <span className="text-mist">{s.label}</span>
+            <span className="font-medium text-star tabular-nums">{format(s.value)}</span>
+            <span className="text-haze tabular-nums">{share(s.value)}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
