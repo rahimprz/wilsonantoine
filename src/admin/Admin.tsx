@@ -15,7 +15,6 @@ import {
   Menu,
   Receipt,
   Settings as SettingsIcon,
-  UsersRound,
   X,
 } from "lucide-react";
 import { onStorageError, useStore } from "../lib/store";
@@ -37,7 +36,6 @@ import Sales from "./views/Sales";
 import Profit from "./views/Profit";
 import Inventory from "./views/Inventory";
 import Statements from "./views/Statements";
-import Reps from "./views/Reps";
 import Subscribers from "./views/Subscribers";
 import Website from "./views/Website";
 import Settings from "./views/Settings";
@@ -48,7 +46,6 @@ const NAV = [
   { to: "/admin/profit", label: "Profit & split", icon: HandCoins },
   { to: "/admin/inventory", label: "Print & stock", icon: Package },
   { to: "/admin/statements", label: "Statements", icon: FileText },
-  { to: "/admin/reps", label: "Sales reps", icon: UsersRound },
   { to: "/admin/subscribers", label: "Subscribers", icon: Mail },
   { to: "/admin/website", label: "Website", icon: Globe },
   { to: "/admin/settings", label: "Settings", icon: SettingsIcon },
@@ -328,7 +325,6 @@ function Shell({ onLock: lockLocal }: { onLock: () => void }) {
             <Route path="profit" element={<Profit />} />
             <Route path="inventory" element={<Inventory />} />
             <Route path="statements" element={<Statements />} />
-            <Route path="reps" element={<Reps />} />
             <Route path="subscribers" element={<Subscribers />} />
             <Route path="website" element={<Website />} />
             <Route path="settings" element={<Settings onLock={onLock} />} />

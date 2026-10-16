@@ -105,8 +105,6 @@ Pages:
   sale and is dated that day unless another report date is picked. Print it or save it as a PDF,
   download the figures as CSV, and keep issued statements on file; a statement on file keeps its
   figures as issued and flags it if sales for that period change.
-- **Sales reps** — copies, revenue, commission owed and monthly target progress per rep;
-  one-click commission statement (CSV) for the selected period.
 - **Subscribers** — newsletter sign-ups from the site; copy all emails or export CSV.
 - **Website** — edit every section of the public site: copy, images, videos, chapters, reviews, buy
   links (with prices and a main link), the excerpt, socials, SEO, and which sections show. Edits are a

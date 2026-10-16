@@ -6,7 +6,7 @@ import { uid } from "../lib/id";
 import { useStore } from "../lib/store";
 import { CHANNELS, FORMATS, GIVEAWAY_CHANNEL } from "../data/constants";
 import { printing, shares, vendorShareFor } from "../lib/profit";
-import { dealStore, partnersStore, printRunsStore, repsStore, salesStore, settingsStore } from "../data/stores";
+import { dealStore, partnersStore, printRunsStore, salesStore, settingsStore } from "../data/stores";
 import type { Sale } from "../data/types";
 import { useAdmin } from "./context";
 import { Button, Card, DemoBadge, Drawer, Field, Input, Select, Textarea, useFeedback } from "./ui";
@@ -63,7 +63,6 @@ const toNum = (v: string) => (v.trim() === "" ? NaN : Number(v));
 
 function SaleForm({ onClose, sale, preset }: SaleEditorProps) {
   const settings = useStore(settingsStore);
-  const reps = useStore(repsStore);
   const deal = useStore(dealStore);
   const runs = useStore(printRunsStore);
   const partners = useStore(partnersStore);
@@ -296,20 +295,7 @@ function SaleForm({ onClose, sale, preset }: SaleEditorProps) {
           )}
         </div>
 
-        <Field label="Sales rep" className="col-span-2 sm:col-span-1">
-          {(id) => (
-            <Select id={id} value={draft.repId} onChange={(e) => set("repId", e.target.value)}>
-              <option value="">Unassigned</option>
-              {reps.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                  {!r.active ? " (inactive)" : ""}
-                </option>
-              ))}
-            </Select>
-          )}
-        </Field>
-        <Field label="Customer / event" className="col-span-2 sm:col-span-1">
+        <Field label="Customer / event" className="col-span-2">
           {(id) => <Input id={id} value={draft.customer} placeholder="Optional" onChange={(e) => set("customer", e.target.value)} />}
         </Field>
         <Field label="Notes" className="col-span-2">

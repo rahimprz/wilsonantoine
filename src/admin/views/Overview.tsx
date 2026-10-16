@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, BookOpen, FileText, PencilLine, Plus } from "lucide-react";
 import { useStore } from "../../lib/store";
 import { fmtDay, fmtDayYear, greeting, num, sharePct } from "../../lib/format";
-import { contentStore, dealStore, partnersStore, printRunsStore, repsStore, salesStore, settingsStore } from "../../data/stores";
+import { contentStore, dealStore, partnersStore, printRunsStore, salesStore, settingsStore } from "../../data/stores";
 import { resolveMedia } from "../../lib/media";
 import { distribution, ledger, outlook, perCopy, printing, repayment } from "../../lib/profit";
 import { primaryRetailer } from "../../site/buy";
@@ -18,7 +18,6 @@ import { NumberedHeader, RepaymentCard, Rows } from "./Profit";
  */
 export default function Overview() {
   const sales = useStore(salesStore);
-  const reps = useStore(repsStore);
   const settings = useStore(settingsStore);
   const deal = useStore(dealStore);
   const partners = useStore(partnersStore);
@@ -37,7 +36,6 @@ export default function Overview() {
   const since = deal.startDate || sales.reduce((min, s) => (!min || s.date < min ? s.date : min), "");
   const needsSetup = look.invested <= 0 || runs.length === 0;
   const recent = [...sales].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 6);
-  const repName = (id: string) => reps.find((r) => r.id === id)?.name ?? "";
 
   return (
     <div>
@@ -186,7 +184,7 @@ export default function Overview() {
                       </span>
                     </td>
                     <td className="px-3 py-3 text-mist">{s.channel}</td>
-                    <td className="px-3 py-3 text-mist">{s.customer || repName(s.repId)}</td>
+                    <td className="px-3 py-3 text-mist">{s.customer}</td>
                     <td className="px-3 py-3 text-right font-medium text-star">{money(s.quantity * s.unitPrice)}</td>
                   </tr>
                 ))}

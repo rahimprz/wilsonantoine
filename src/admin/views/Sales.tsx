@@ -42,7 +42,6 @@ export default function Sales() {
   const [query, setQuery] = useState("");
   const [channel, setChannel] = useState("");
   const [format, setFormat] = useState("");
-  const [rep, setRep] = useState("");
   const [sort, setSort] = useState<{ key: "date" | "gross"; dir: 1 | -1 }>({ key: "date", dir: -1 });
   const [limit, setLimit] = useState(PAGE);
   const [editing, setEditing] = useState<Sale | null>(null);
@@ -59,11 +58,10 @@ export default function Sales() {
       .filter((s) => inRange(s.date, range.start, range.end))
       .filter((s) => !channel || s.channel === channel)
       .filter((s) => !format || s.format === format)
-      .filter((s) => !rep || (rep === "none" ? !s.repId : s.repId === rep))
       .filter((s) => !q || [s.customer, s.notes, s.channel, s.format, repName(s.repId)].some((v) => v.toLowerCase().includes(q)))
       .sort((a, b) => (sort.key === "date" ? a.date.localeCompare(b.date) || a.createdAt - b.createdAt : gross(a) - gross(b)) * sort.dir);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sales, range, channel, format, rep, query, sort, reps]);
+  }, [sales, range, channel, format, query, sort, reps]);
 
   const sum = ledger(rows);
 
@@ -192,7 +190,7 @@ export default function Sales() {
             <span className="sr-only">Search sales</span>
             <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-haze" />
             <Input
-              placeholder="Search customer, notes, rep…"
+              placeholder="Search customer, notes…"
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
@@ -211,15 +209,6 @@ export default function Sales() {
             <option value="">All formats</option>
             {FORMATS.map((f) => (
               <option key={f}>{f}</option>
-            ))}
-          </Select>
-          <Select value={rep} onChange={(e) => setRep(e.target.value)} aria-label="Filter by rep">
-            <option value="">All reps</option>
-            <option value="none">Unassigned</option>
-            {reps.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.name}
-              </option>
             ))}
           </Select>
         </div>
@@ -255,13 +244,12 @@ export default function Sales() {
           </EmptyState>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1040px] text-sm">
+            <table className="w-full min-w-[940px] text-sm">
               <thead className="bg-white/[0.02] text-left text-xs text-haze">
                 <tr>
                   <th className="px-5 py-3 font-medium">{sortHeader("date", "Date")}</th>
                   <th className="px-3 py-3 font-medium">Item</th>
                   <th className="px-3 py-3 font-medium">Channel</th>
-                  <th className="px-3 py-3 font-medium">Rep</th>
                   <th className="px-3 py-3 font-medium">Customer / notes</th>
                   <th className="px-3 py-3 text-right font-medium">{sortHeader("gross", "Revenue", "justify-end")}</th>
                   <th className="px-3 py-3 text-right font-medium">Net received</th>
@@ -282,7 +270,6 @@ export default function Sales() {
                       <span className="text-xs text-haze">{money(s.unitPrice)} each</span>
                     </td>
                     <td className="px-3 py-3 text-mist">{s.channel}</td>
-                    <td className="px-3 py-3 text-mist">{repName(s.repId) || <span className="text-haze">—</span>}</td>
                     <td className="max-w-[220px] px-3 py-3">
                       <span className="block truncate text-mist">{s.customer || <span className="text-haze">—</span>}</span>
                       {s.notes && <span className="block truncate text-xs text-haze">{s.notes}</span>}
