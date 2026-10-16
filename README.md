@@ -68,8 +68,9 @@ npm run build
 
 ## The dashboard (`/admin`)
 
-The starting passcode was shared privately (it isn't written in this repo). Change it under
-**Settings → Security** after signing in.
+Without a database it opens with a passcode — the starting one was shared privately (it isn't written
+in this repo); change it under **Settings → Security**. With Supabase connected it uses account
+sign-in instead (see *Where the data lives* below).
 (A changed passcode is saved in that browser; other devices keep using the starting one until changed there
 too. To change the starting passcode for everyone, update `passHash` in `src/data/stores.ts` — it's
 `sha256("wa-default-v1:" + passcode)`.)
@@ -128,24 +129,61 @@ and run `node scripts/seal-seed.mjs setup.json "<passcode>" > src/data/seed.seal
 `seedId`. A setup file can also simply be imported from *Profit & split* or *Statements* — it adds its
 records and keeps everything already there.
 
-### Where the data lives (for now)
+### Where the data lives
 
-As requested, nothing is connected to a server yet: the dashboard saves to **this browser's
-localStorage**. That means:
+The dashboard runs in one of two modes, chosen by whether Supabase keys are present at build time.
 
-- It persists across visits on the same browser and device, but not across devices.
-- Website edits show on the live site **only in this browser** until a backend serves them to everyone.
-- Engagement stats and newsletter sign-ups are only those made in this browser.
-- The passcode is a convenience lock for this device (stored as a salted SHA-256 hash), not server
-  security.
-- **Settings → Export backup** downloads everything as one JSON file; **Restore** brings it back.
+**Without a database (the default).** Everything is saved in **this browser's localStorage**: it
+persists on that device only, website edits show only in that browser, and the passcode is a
+convenience lock (a salted SHA-256 hash), not server security. **Settings → Export backup** downloads
+everything as one JSON file; **Restore** brings it back.
 
-Connecting a backend later is contained: every collection goes through `createStore()` in
-`src/lib/store.ts` (one key per collection in `src/data/stores.ts`), so swapping localStorage for
-Postgres/Supabase/an API means changing that file, not the UI. **`db/schema.sql`** is the matching
-PostgreSQL schema — one table per collection, same fields — plus a `sales_profit` view with the
-statement's arithmetic. All the money maths lives in `src/lib/profit.ts` as pure functions, so a server
-can produce the same statements. Real sign-in replaces the passcode when the database is connected.
+**With Supabase.** Every collection lives in the database and the dashboard works from any device:
+
+- `/admin` asks for a real **account sign-in** (email + password, or an emailed one-time link) instead
+  of the passcode. Only addresses on the admin list get in; anyone else sees “Not on the admin list”.
+- Each change is written to the database as it's made (only the rows that changed); the sidebar shows
+  *Saved to database* / *Saving…* / *Not saved — retrying*. Returning to the tab picks up new data;
+  *Settings → Sync now* does it on demand.
+- **Publishing the website** saves its content to the database, and every visitor sees it.
+- **Newsletter sign-ups and site analytics** from every visitor land in the database.
+- The first browser to sign in to an empty database uploads what it already holds, so nothing typed
+  before the switch is lost. If the publisher's figures aren't in yet, *Profit & split* offers to load
+  them with the original dashboard passcode.
+- **Security:** every table has row-level security. With the public key, visitors can only read the
+  published website content and add sign-ups/analytics events — never read them back. All other data
+  needs a signed-in admin. The passcode hash never leaves the browser.
+
+#### Connecting Supabase (about five minutes)
+
+1. **Create the database.** In Vercel open the project → **Storage → Create Database → Supabase**
+   (or *Connect Store* for an existing Supabase project) and connect it to this project for
+   Production and Preview. This adds `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `POSTGRES_URL_NON_POOLING` and friends to the project's environment variables — the app reads
+   those names as they are.
+   *Using a Supabase project made on supabase.com instead?* Add the variables yourself — see
+   [`.env.example`](.env.example): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (Project Settings →
+   API) and `SUPABASE_DB_URL` (Project Settings → Database → Connection string, URI).
+2. **Say who may sign in.** Add an environment variable `ADMIN_EMAILS` with Dr. Antoine's address
+   (comma-separate several).
+3. **Redeploy.** The build runs `scripts/db-migrate.mjs` first: it creates the tables and security
+   rules from [`supabase/migrations/`](supabase/migrations) (each migration once, in order) and puts
+   the `ADMIN_EMAILS` addresses on the admin list. The log shows `[db] … applied`.
+4. **Point sign-in emails at the site.** Supabase → Authentication → URL Configuration: set *Site URL*
+   to the live address and add `https://<your-domain>/admin` under *Redirect URLs*.
+5. **Sign in.** Go to `/admin`, choose *Email me a link*, open it, then set a password under
+   *Settings → Account*. (Or create the user with a password in Supabase → Authentication → Users.)
+
+No Vercel integration and no build-time database URL? Paste `supabase/migrations/*.sql` into
+Supabase → SQL editor, then run `insert into admins (email) values ('you@example.com');`.
+
+Locally, put the same variables in `.env.local` (copy `.env.example`); `npm run db:migrate` applies
+migrations on demand.
+
+Under the hood: the screens still read and write the same stores (`src/data/stores.ts`);
+`src/data/remote.ts` mirrors each one to its table (columns are the field names in snake_case), and
+`src/lib/supabase.ts` holds the connection. All the money maths is in `src/lib/profit.ts`, as pure
+functions, and the database has a `sales_profit` view with the same arithmetic per sale.
 
 ## Content to review before launch
 
@@ -164,8 +202,8 @@ src/
   site/        Site.tsx (page + Lenis), sections/, components/ (Header, Stars, Book3D, BgVideo, SectionHead…)
   admin/       Admin.tsx (lock + shell), views/, charts.tsx, components.tsx, ui.tsx
   data/        types, defaultContent (all site copy), stores, demo data, constants
-  lib/         gsap, store, metrics, profit (the statement's maths), media, format, csv, analytics, passcode
-scripts/       fetch-media.mjs, seal-seed.mjs, render-videos/ (shaders + renderer)
-db/            schema.sql — the database the dashboard will connect to
+  lib/         gsap, store, supabase, metrics, profit (the statement's maths), media, format, csv, analytics, passcode
+scripts/       db-migrate.mjs, fetch-media.mjs, seal-seed.mjs, render-videos/ (shaders + renderer)
+supabase/      migrations/ — the database schema and security rules, applied at build time
 public/videos  rendered background loops
 ```

@@ -10,6 +10,7 @@ import {
   KeyRound,
   LayoutDashboard,
   Lock,
+  LogOut,
   Mail,
   Menu,
   Receipt,
@@ -25,6 +26,11 @@ import { clearDemoData, hasDemoData } from "../data/demo";
 import { contentStore, eventsStore, leadsStore, repsStore, salesStore, settingsStore, subscribersStore } from "../data/stores";
 import { primaryRetailer } from "../site/buy";
 import { applySealedSeed } from "../data/seed";
+import { useSyncStatus } from "../data/remote";
+import { hasDatabase } from "../lib/supabase";
+import { useAccount } from "./account";
+import AccountGate from "./AccountGate";
+import LockLayout from "./LockLayout";
 import { AdminProvider } from "./context";
 import { Button, FeedbackProvider, Input, useFeedback } from "./ui";
 import Overview from "./views/Overview";
@@ -58,6 +64,19 @@ export default function Admin() {
     document.title = "Dashboard — Wilson Antoine";
     document.documentElement.style.overflow = "";
   }, []);
+
+  // connected to Supabase: account sign-in, and the data lives in the database
+  if (hasDatabase) {
+    return (
+      <AccountGate>
+        <FeedbackProvider>
+          <AdminProvider>
+            <Shell onLock={() => {}} />
+          </AdminProvider>
+        </FeedbackProvider>
+      </AccountGate>
+    );
+  }
 
   if (!unlocked) {
     return (
@@ -137,65 +156,47 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
 
   const secondsLeft = waitUntil ? Math.ceil((waitUntil - Date.now()) / 1000) : 0;
   const logo = resolveMedia(content.brand.logo);
-  const cover = resolveMedia(content.book.cover);
 
   return (
-    <div className="relative grid min-h-screen overflow-hidden bg-[#070b1c] lg:grid-cols-[1.05fr_0.95fr]">
-      {/* the book, under starlight */}
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-[radial-gradient(70%_60%_at_50%_45%,#1a2c7a,#0b1233_60%,#070b1c)] p-12 lg:flex">
-        <div className="stars-bg pointer-events-none absolute inset-0" />
-        <img src={logo} alt={content.brand.name} className="relative h-12 w-auto self-start" onError={(e) => (e.currentTarget.style.display = "none")} />
-        <div className="relative mx-auto">
-          <div className="absolute top-1/2 left-1/2 aspect-square w-[190%] -translate-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(51,84,210,0.55),transparent)]" />
-          <span className="absolute top-1/2 left-1/2 aspect-square w-[175%] -translate-1/2 rounded-full border border-gold/20" />
-          <span className="absolute top-1/2 left-1/2 aspect-square w-[145%] -translate-1/2 rounded-full border border-dashed border-cyan/25 animate-spin-slow" />
-          {cover && <img src={cover} alt={content.hero.title} className="relative w-[min(260px,22vw)] -rotate-3 rounded-r-[4px] shadow-[0_40px_60px_-20px_rgba(0,0,0,0.9)] animate-float" />}
+    <LockLayout>
+      <form onSubmit={submit} className="relative w-full max-w-sm rounded-3xl border border-gold/20 bg-[#0b1029]/90 p-8 shadow-2xl backdrop-blur">
+        <img src={logo} alt={content.brand.name} className="mx-auto h-14 w-auto lg:hidden" onError={(e) => (e.currentTarget.style.display = "none")} />
+        <div className="mx-auto mt-6 grid h-12 w-12 place-items-center rounded-full border border-gold/40 bg-gold/10 text-gold lg:mt-0">
+          <KeyRound className="h-5 w-5" />
         </div>
-        <div className="relative">
-          <p className="font-heading text-[2rem] leading-tight text-white italic">{content.hero.title}</p>
-          <p className="mt-2 text-sm tracking-[0.25em] text-gold uppercase">Sales &amp; website dashboard</p>
+        <h1 className="font-heading mt-4 text-center text-[1.75rem] font-medium text-white">{creating ? "Set up your dashboard" : `Welcome back${settings.ownerName ? `, ${settings.ownerName}` : ""}`}</h1>
+        <p className="mt-2 text-center text-sm text-mist">
+          {creating ? "Choose a passcode to keep the sales dashboard private on this device." : "Enter your passcode to open the dashboard."}
+        </p>
+        <div className="mt-6 space-y-3">
+          <Input type="password" autoFocus autoComplete={creating ? "new-password" : "current-password"} placeholder="Passcode" value={pass} onChange={(e) => setPass(e.target.value)} aria-label="Passcode" disabled={!!waitUntil} />
+          {creating && <Input type="password" autoComplete="new-password" placeholder="Confirm passcode" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="Confirm passcode" />}
         </div>
-      </div>
-
-      <div className="relative grid place-items-center px-4 py-12">
-        <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_30%,rgba(24,54,165,0.3),transparent_70%)]" />
-        <form onSubmit={submit} className="relative w-full max-w-sm rounded-3xl border border-gold/20 bg-[#0b1029]/90 p-8 shadow-2xl backdrop-blur">
-          <img src={logo} alt={content.brand.name} className="mx-auto h-14 w-auto lg:hidden" onError={(e) => (e.currentTarget.style.display = "none")} />
-          <div className="mx-auto mt-6 grid h-12 w-12 place-items-center rounded-full border border-gold/40 bg-gold/10 text-gold lg:mt-0">
-            <KeyRound className="h-5 w-5" />
-          </div>
-          <h1 className="font-heading mt-4 text-center text-[1.75rem] font-medium text-white">{creating ? "Set up your dashboard" : `Welcome back${settings.ownerName ? `, ${settings.ownerName}` : ""}`}</h1>
-          <p className="mt-2 text-center text-sm text-mist">
-            {creating ? "Choose a passcode to keep the sales dashboard private on this device." : "Enter your passcode to open the dashboard."}
+        {error && (
+          <p className="mt-3 text-sm text-red-300" role="alert">
+            {error}
+            {secondsLeft > 0 && ` (${secondsLeft}s)`}
           </p>
-          <div className="mt-6 space-y-3">
-            <Input type="password" autoFocus autoComplete={creating ? "new-password" : "current-password"} placeholder="Passcode" value={pass} onChange={(e) => setPass(e.target.value)} aria-label="Passcode" disabled={!!waitUntil} />
-            {creating && <Input type="password" autoComplete="new-password" placeholder="Confirm passcode" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-label="Confirm passcode" />}
-          </div>
-          {error && (
-            <p className="mt-3 text-sm text-red-300" role="alert">
-              {error}
-              {secondsLeft > 0 && ` (${secondsLeft}s)`}
-            </p>
-          )}
-          <Button type="submit" variant="primary" className="mt-6 w-full" disabled={busy || !!waitUntil}>
-            {creating ? "Create passcode & continue" : "Unlock"}
-          </Button>
-          <p className="mt-6 text-center text-xs leading-relaxed text-haze">
-            Records are saved in this browser until the dashboard is connected to a server. Export a backup from Settings anytime.
-          </p>
-          <a href="/" className="mt-4 block text-center text-xs text-mist hover:text-gold">
-            ← Back to the website
-          </a>
-        </form>
-      </div>
-    </div>
+        )}
+        <Button type="submit" variant="primary" className="mt-6 w-full" disabled={busy || !!waitUntil}>
+          {creating ? "Create passcode & continue" : "Unlock"}
+        </Button>
+        <p className="mt-6 text-center text-xs leading-relaxed text-haze">
+          Records are saved in this browser until the dashboard is connected to a server. Export a backup from Settings anytime.
+        </p>
+        <a href="/" className="mt-4 block text-center text-xs text-mist hover:text-gold">
+          ← Back to the website
+        </a>
+      </form>
+    </LockLayout>
   );
 }
 
 // ---------------------------------------------------------------- shell
 
-function Shell({ onLock }: { onLock: () => void }) {
+function Shell({ onLock: lockLocal }: { onLock: () => void }) {
+  const account = useAccount();
+  const onLock = account ? () => void account.signOut() : lockLocal;
   const [menu, setMenu] = useState(false);
   const location = useLocation();
   const { toast, confirm } = useFeedback();
@@ -229,6 +230,7 @@ function Shell({ onLock }: { onLock: () => void }) {
           <span className="h-px w-5 bg-gold/60" /> Sales dashboard
         </span>
       </a>
+      {account && <SyncBadge email={account.email} />}
       {NAV.map(({ to, label, icon: Icon, end }) => (
         <NavLink
           key={to}
@@ -269,7 +271,7 @@ function Shell({ onLock }: { onLock: () => void }) {
           <ExternalLink className="h-[18px] w-[18px]" /> View website
         </a>
         <button onClick={onLock} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[0.92rem] text-mist transition hover:bg-white/[0.05] hover:text-star">
-          <Lock className="h-[18px] w-[18px]" /> Lock dashboard
+          {account ? <LogOut className="h-[18px] w-[18px]" /> : <Lock className="h-[18px] w-[18px]" />} {account ? "Sign out" : "Lock dashboard"}
         </button>
       </div>
       </div>
@@ -338,6 +340,22 @@ function Shell({ onLock }: { onLock: () => void }) {
           </Routes>
         </main>
       </div>
+    </div>
+  );
+}
+
+/** "Saved", "Saving…" or "Not saved — retrying", under the logo, when the dashboard runs on the database. */
+function SyncBadge({ email }: { email: string }) {
+  const st = useSyncStatus();
+  const tone = st.state === "error" ? "bg-[#d03b3b]" : st.state === "saving" || st.state === "loading" ? "bg-[#fab219] animate-pulse" : "bg-[#0ca30c]";
+  const label = st.state === "error" ? "Not saved — retrying" : st.state === "saving" || st.state === "loading" ? "Saving…" : "Saved to database";
+  return (
+    <div className="-mt-3 mb-5 px-2" title={st.state === "error" ? st.message : `Signed in as ${email}`}>
+      <p className="flex items-center gap-2 text-xs text-mist" role="status" aria-live="polite">
+        <span className={`h-2 w-2 rounded-full ${tone}`} aria-hidden />
+        {label}
+      </p>
+      <p className="mt-0.5 truncate pl-4 text-[0.7rem] text-haze">{email}</p>
     </div>
   );
 }

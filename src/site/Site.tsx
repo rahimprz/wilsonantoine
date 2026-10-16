@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Lenis from "lenis";
 import { gsap, prefersReducedMotion, ScrollTrigger } from "../lib/gsap";
 import { track } from "../lib/analytics";
-import { useStore } from "../lib/store";
+import { mergeDefaults, useStore } from "../lib/store";
+import { fetchPublishedContent, hasDatabase } from "../lib/supabase";
+import { DEFAULT_CONTENT } from "../data/defaultContent";
 import { contentStore } from "../data/stores";
 import BackToTop from "./components/BackToTop";
 import ExcerptModal from "./components/ExcerptModal";
@@ -62,6 +64,18 @@ export default function Site() {
   useEffect(() => {
     track("visit");
     track("pageview");
+  }, []);
+
+  // with a database, every visitor sees what was last published from the dashboard
+  useEffect(() => {
+    if (!hasDatabase) return;
+    let alive = true;
+    fetchPublishedContent().then((data) => {
+      if (alive && data) contentStore.set(mergeDefaults(DEFAULT_CONTENT, data));
+    });
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const nav = useMemo<NavItem[]>(() => {

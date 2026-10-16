@@ -233,6 +233,7 @@ export interface Subscriber {
 export type EventType = "visit" | "pageview" | "buy_click" | "excerpt_open" | "chapter_open" | "subscribe";
 
 export interface SiteEvent {
+  id?: string;
   t: number;
   type: EventType;
   meta?: string;

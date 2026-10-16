@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState, type ReactNode } from "react";
-import { Database, Download, HardDrive, KeyRound, Lock, Sparkles, Trash2, Upload } from "lucide-react";
+import { Database, Download, HardDrive, KeyRound, Lock, RefreshCw, Sparkles, Trash2, Upload } from "lucide-react";
 import { storageBytes, useStore } from "../../lib/store";
 import { hashPasscode, newSalt } from "../../lib/passcode";
 import { download } from "../../lib/csv";
@@ -9,10 +9,12 @@ import { clearDemoData, hasDemoData, loadDemoData } from "../../data/demo";
 import { ALL_STORES, DEFAULT_SETTINGS, eventsStore, exportBackup, importBackup, salesStore, settingsStore } from "../../data/stores";
 import { Progress } from "../charts";
 import { Button, Card, Field, Input, Modal, PageHeader, Select, useFeedback } from "../ui";
+import { useAccount } from "../account";
 
 const QUOTA = 5 * 1024 * 1024; // typical per-site localStorage allowance
 
 export default function Settings({ onLock }: { onLock: () => void }) {
+  const account = useAccount();
   const settings = useStore(settingsStore);
   const sales = useStore(salesStore);
   const events = useStore(eventsStore);
@@ -111,25 +113,36 @@ export default function Settings({ onLock }: { onLock: () => void }) {
         </div>
       </Section>
 
-      <Section icon={<KeyRound className="h-5 w-5" />} title="Security" description="The passcode keeps the dashboard private. Change the starting passcode after your first sign-in — a new one is saved for this browser as a salted hash.">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="Current passcode">{(id) => <Input id={id} type="password" autoComplete="current-password" value={pass.current} onChange={(e) => setPass({ ...pass, current: e.target.value })} />}</Field>
-          <Field label="New passcode">{(id) => <Input id={id} type="password" autoComplete="new-password" value={pass.next} onChange={(e) => setPass({ ...pass, next: e.target.value })} />}</Field>
-          <Field label="Confirm new passcode" error={passError}>
-            {(id) => <Input id={id} type="password" autoComplete="new-password" value={pass.confirm} onChange={(e) => setPass({ ...pass, confirm: e.target.value })} />}
-          </Field>
-        </div>
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Button variant="primary" onClick={changePass} disabled={!pass.current || !pass.next}>
-            Change passcode
-          </Button>
-          <Button onClick={onLock}>
-            <Lock className="h-4 w-4" /> Lock now
-          </Button>
-        </div>
-      </Section>
+      {account ? <AccountSection /> : (
+        <Section icon={<KeyRound className="h-5 w-5" />} title="Security" description="The passcode keeps the dashboard private. Change the starting passcode after your first sign-in — a new one is saved for this browser as a salted hash.">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Current passcode">{(id) => <Input id={id} type="password" autoComplete="current-password" value={pass.current} onChange={(e) => setPass({ ...pass, current: e.target.value })} />}</Field>
+            <Field label="New passcode">{(id) => <Input id={id} type="password" autoComplete="new-password" value={pass.next} onChange={(e) => setPass({ ...pass, next: e.target.value })} />}</Field>
+            <Field label="Confirm new passcode" error={passError}>
+              {(id) => <Input id={id} type="password" autoComplete="new-password" value={pass.confirm} onChange={(e) => setPass({ ...pass, confirm: e.target.value })} />}
+            </Field>
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Button variant="primary" onClick={changePass} disabled={!pass.current || !pass.next}>
+              Change passcode
+            </Button>
+            <Button onClick={onLock}>
+              <Lock className="h-4 w-4" /> Lock now
+            </Button>
+          </div>
+        </Section>
+      )}
 
-      <Section icon={<Database className="h-5 w-5" />} title="Your data" description="Everything lives in this browser for now. Export a backup regularly — and before clearing your browser or switching computers.">
+      <Section
+        icon={<Database className="h-5 w-5" />}
+        title="Your data"
+        description={
+          account
+            ? `Saved in your Supabase database (${account.databaseHost}) and available on any device you sign in from. A backup file is still a good idea now and then.`
+            : "Everything lives in this browser for now. Export a backup regularly — and before clearing your browser or switching computers."
+        }
+      >
+        {!account && (
         <div className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-4">
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="flex items-center gap-2 text-mist">
@@ -144,6 +157,7 @@ export default function Settings({ onLock }: { onLock: () => void }) {
             {num(sales.length)} sales · {num(events.length)} website events recorded
           </p>
         </div>
+        )}
         <div className="mt-5 flex flex-wrap gap-2">
           <Button
             variant="primary"
@@ -202,7 +216,7 @@ export default function Settings({ onLock }: { onLock: () => void }) {
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-400/20 bg-red-500/[0.05] p-4">
           <div>
             <p className="text-sm font-medium text-red-200">Erase everything</p>
-            <p className="text-xs text-haze">Deletes all sales, reps, pipeline, subscribers and website edits on this device.</p>
+            <p className="text-xs text-haze">Deletes all sales, reps, pipeline, subscribers and website edits {account ? "from the database" : "on this device"}.</p>
           </div>
           <Button variant="danger" onClick={() => setErase(true)}>
             <Trash2 className="h-4 w-4" /> Erase…
@@ -225,7 +239,9 @@ export default function Settings({ onLock }: { onLock: () => void }) {
           </>
         }
       >
-        <p>This can't be undone. Export a backup first if you might need it. Type <strong className="text-star">ERASE</strong> to confirm.</p>
+        <p>
+          This can't be undone{account ? " — it also deletes every record in the database, for every device" : ""}. Export a backup first if you might need it. Type <strong className="text-star">ERASE</strong> to confirm.
+        </p>
         <Input className="mt-4" value={eraseText} onChange={(e) => setEraseText(e.target.value)} aria-label="Type ERASE to confirm" autoFocus />
       </Modal>
     </div>
@@ -244,5 +260,55 @@ function Section({ icon, title, description, children }: { icon: ReactNode; titl
       </div>
       {children}
     </Card>
+  );
+}
+
+/** Database mode: the signed-in account, a password of its own, and a manual "sync now". */
+function AccountSection() {
+  const account = useAccount()!;
+  const { toast } = useFeedback();
+  const [pw, setPw] = useState({ next: "", confirm: "" });
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setError("");
+    if (pw.next.length < 8) return setError("Use at least 8 characters.");
+    if (pw.next !== pw.confirm) return setError("The two passwords don't match.");
+    setBusy(true);
+    const problem = await account.setPassword(pw.next);
+    setBusy(false);
+    if (problem) return setError(problem);
+    setPw({ next: "", confirm: "" });
+    toast("Password saved — use it to sign in from now on");
+  };
+  return (
+    <Section icon={<KeyRound className="h-5 w-5" />} title="Account" description={`Signed in as ${account.email}. Only addresses on the dashboard's admin list can open it.`}>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="New password">{(id) => <Input id={id} type="password" autoComplete="new-password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} />}</Field>
+        <Field label="Confirm new password" error={error}>
+          {(id) => <Input id={id} type="password" autoComplete="new-password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} />}
+        </Field>
+      </div>
+      <div className="mt-5 flex flex-wrap gap-2">
+        <Button variant="primary" onClick={save} disabled={busy || !pw.next}>
+          Set password
+        </Button>
+        <Button
+          onClick={async () => {
+            try {
+              await account.refresh();
+              toast("Up to date with the database");
+            } catch (err) {
+              toast(err instanceof Error ? err.message : "Couldn't reach the database", "bad");
+            }
+          }}
+        >
+          <RefreshCw className="h-4 w-4" /> Sync now
+        </Button>
+        <Button onClick={() => void account.signOut()}>
+          <Lock className="h-4 w-4" /> Sign out
+        </Button>
+      </div>
+    </Section>
   );
 }

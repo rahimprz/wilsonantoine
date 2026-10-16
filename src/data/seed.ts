@@ -43,3 +43,8 @@ export async function applySealedSeed(passcode: string): Promise<boolean> {
     return false;
   }
 }
+
+/** True while this browser hasn't opened the sealed setup data yet. */
+export function sealedSeedPending(): boolean {
+  return !!SEALED_SEED.data && !appliedIds().includes(SEALED_SEED.id);
+}

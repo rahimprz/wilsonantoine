@@ -9,7 +9,8 @@ import type { Payout } from "../../data/types";
 import { useAdmin } from "../context";
 import { Progress, SplitBar, VIZ } from "../charts";
 import { DealEditor, ImportSetupButton, PayoutEditor, PeriodPicker, PrintRunEditor, usePeriod } from "../deal";
-import { Badge, Button, Card, DemoBadge, IconButton, PageHeader, useFeedback } from "../ui";
+import { Badge, Button, Card, DemoBadge, IconButton, Input, PageHeader, useFeedback } from "../ui";
+import { applySealedSeed, sealedSeedPending } from "../../data/seed";
 
 /** A card header numbered like the publisher's statement: "01 · Investment summary". */
 export function NumberedHeader({ n, title, subtitle, action }: { n?: string; title: string; subtitle?: ReactNode; action?: ReactNode }) {
@@ -121,6 +122,7 @@ export default function Profit() {
             </div>
             <ImportSetupButton />
           </div>
+          {sealedSeedPending() && <SealedFigures />}
           <ol className="mt-5 grid gap-3 md:grid-cols-3">
             {setup.map((s, i) => (
               <li key={i} className={`flex items-start gap-3 rounded-xl border p-4 ${s.done ? "border-[#0ca30c]/30 bg-[#0ca30c]/[0.06]" : "border-white/[0.07] bg-white/[0.02]"}`}>
@@ -481,4 +483,35 @@ export default function Profit() {
 function sharePct(x: number) {
   const whole = Math.abs(x * 100 - Math.round(x * 100)) < 0.05;
   return pct(x, whole ? 0 : 1);
+}
+
+/** Opens the publisher's statement figures that ship sealed with the dashboard passcode. */
+function SealedFigures() {
+  const { toast } = useFeedback();
+  const [pass, setPass] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
+  return (
+    <form
+      className="mt-5 flex flex-wrap items-end gap-3 rounded-xl border border-gold/25 bg-gold/[0.06] p-4"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        const ok = await applySealedSeed(pass);
+        setBusy(false);
+        setFailed(!ok);
+        if (ok) toast("The publisher's July 10 statement figures are in");
+      }}
+    >
+      <div className="min-w-[220px] flex-1">
+        <p className="text-sm text-star">Load the publisher's July 10, 2026 statement</p>
+        <p className="mt-0.5 text-xs text-haze">Investments, the print run and copies sold to June 30 — enter the original dashboard passcode to open them.</p>
+      </div>
+      <Input type="password" aria-label="Dashboard passcode" placeholder="Passcode" value={pass} onChange={(e) => setPass(e.target.value)} className="!w-48" />
+      <Button type="submit" variant="primary" disabled={busy || !pass}>
+        Load figures
+      </Button>
+      {failed && <p className="w-full text-xs text-red-300">That passcode doesn't open them.</p>}
+    </form>
+  );
 }

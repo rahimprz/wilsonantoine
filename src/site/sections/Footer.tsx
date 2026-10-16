@@ -3,6 +3,7 @@ import { ArrowRight, ArrowUp, Check, Mail } from "lucide-react";
 import { track } from "../../lib/analytics";
 import { uid } from "../../lib/id";
 import { resolveMedia } from "../../lib/media";
+import { hasDatabase, insertPublic } from "../../lib/supabase";
 import { subscribersStore } from "../../data/stores";
 import type { SiteContent } from "../../data/types";
 import { SOCIAL_LABELS, SocialIcon, type SocialKey } from "../components/Icons";
@@ -33,8 +34,13 @@ export default function Footer({ footer, nav, name, credentials, logo }: FooterP
     e.preventDefault();
     const value = email.trim().toLowerCase();
     if (!EMAIL_RE.test(value)) return setStatus("error");
-    if (!subscribersStore.get().some((s) => s.email.toLowerCase() === value)) {
-      subscribersStore.set((prev) => [...prev, { id: uid("sub_"), email: value, name: "", source: "website", date: new Date().toISOString() }]);
+    const sub = { id: uid("sub_"), email: value, name: "", source: "website" as const, date: new Date().toISOString() };
+    if (hasDatabase) {
+      // a repeat address is turned away by the database's unique index, which is fine
+      insertPublic("subscribers", { ...sub, demo: false });
+      track("subscribe");
+    } else if (!subscribersStore.get().some((s) => s.email.toLowerCase() === value)) {
+      subscribersStore.set((prev) => [...prev, sub]);
       track("subscribe");
     }
     setStatus("done");
