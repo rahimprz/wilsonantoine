@@ -1,20 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Supabase connection. Set the project URL and its public (anon / publishable) key — either as
- * VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY, or the NEXT_PUBLIC_* names the Vercel Supabase
- * integration creates (vite.config.ts exposes both prefixes). Without them the whole site runs on
- * browser storage exactly as before.
+ * Supabase connection: the project URL and its public (anon / publishable) key. vite.config.ts picks
+ * them from the environment at build time — VITE_*, NEXT_PUBLIC_* or the plain SUPABASE_* names the
+ * Vercel integration creates. Without them the whole site runs on browser storage exactly as before.
  */
-const env = import.meta.env as Record<string, string | undefined>;
-
-export const SUPABASE_URL = (env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
-export const SUPABASE_KEY =
-  env.VITE_SUPABASE_ANON_KEY ||
-  env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  "";
+export const SUPABASE_URL = __SUPABASE_URL__;
+export const SUPABASE_KEY = __SUPABASE_KEY__;
 
 export const hasDatabase = !!(SUPABASE_URL && SUPABASE_KEY);
 
