@@ -80,12 +80,11 @@ sidebar, and a *Your book* banner on the overview with lifetime copies, earnings
 
 Pages:
 
-- **Overview** — copies sold, sales revenue, net profit and Dr. Antoine's share, each with change vs. the
-  previous period and a sparkline; a *Your book* banner with all-time copies, profit, his share (and
-  anything still outstanding) and copies in stock; revenue-over-time chart (hover for details, or flip to a table); this month's
-  goal with pace projection; copies by format; revenue by channel; website engagement (visits → chapter
-  opens → excerpt reads → buy clicks → sign-ups); rep leaderboard; pipeline follow-ups; recent sales.
-  A date-range picker (7 days → all time) drives everything.
+- **Overview** — the publisher's Book Sales & Profit Distribution Report, kept live and cumulative to
+  date: total investment, books printed, printing cost and selling price per book; books sold, total
+  sales revenue (with the distributor share and net received), total net profit and Dr. Antoine's
+  profit; revenue per book; the profit distribution by partner; and the sales entries the figures are
+  added up from. Every figure recalculates as soon as a sale, the print run or the deal changes.
 - **Sales** — the ledger. Record/edit/duplicate/delete (with undo), search and filter, CSV export and
   import. Each sale shows revenue → distributor share → net received → printing cost → profit; the
   share, net and printing cost fill in from the deal and print runs, and can be overridden per sale.
@@ -110,7 +109,7 @@ Pages:
 - **Website** — edit every section of the public site: copy, images, videos, chapters, reviews, buy
   links (with prices and a main link), the excerpt, socials, SEO, and which sections show. Edits are a
   draft until **Publish**.
-- **Settings** — name, currency, monthly targets, royalty rates, passcode, backup export/restore,
+- **Settings** — name, currency, royalty rates, passcode, backup export/restore,
   demo data, erase.
 
 **Demo data** — “Load demo data” fills the dashboard with sample records, every one badged *Demo*;

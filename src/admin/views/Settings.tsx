@@ -23,8 +23,6 @@ export default function Settings({ onLock }: { onLock: () => void }) {
   const [form, setForm] = useState({
     ownerName: settings.ownerName,
     currency: settings.currency,
-    monthlyUnitTarget: String(settings.monthlyUnitTarget),
-    monthlyRevenueTarget: String(settings.monthlyRevenueTarget),
     royaltyRates: Object.fromEntries(FORMATS.map((f) => [f, String(settings.royaltyRates[f] ?? DEFAULT_ROYALTY[f])])) as Record<string, string>,
   });
   const [pass, setPass] = useState({ current: "", next: "", confirm: "" });
@@ -35,10 +33,8 @@ export default function Settings({ onLock }: { onLock: () => void }) {
   const bytes = useMemo(() => storageBytes(), [settings, sales, events]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveBusiness = () => {
-    const units = Math.max(0, Math.round(Number(form.monthlyUnitTarget) || 0));
-    const revenue = Math.max(0, Number(form.monthlyRevenueTarget) || 0);
     const royaltyRates = Object.fromEntries(Object.entries(form.royaltyRates).map(([k, v]) => [k, Math.min(100, Math.max(0, Number(v) || 0))]));
-    settingsStore.set((s) => ({ ...s, ownerName: form.ownerName.trim(), currency: form.currency, monthlyUnitTarget: units, monthlyRevenueTarget: revenue, royaltyRates }));
+    settingsStore.set((s) => ({ ...s, ownerName: form.ownerName.trim(), currency: form.currency, royaltyRates }));
     toast("Settings saved");
   };
 
@@ -92,8 +88,6 @@ export default function Settings({ onLock }: { onLock: () => void }) {
               </Select>
             )}
           </Field>
-          <Field label="Monthly target — copies">{(id) => <Input id={id} type="number" min={0} value={form.monthlyUnitTarget} onChange={(e) => setForm({ ...form, monthlyUnitTarget: e.target.value })} />}</Field>
-          <Field label="Monthly target — gross revenue">{(id) => <Input id={id} type="number" min={0} value={form.monthlyRevenueTarget} onChange={(e) => setForm({ ...form, monthlyRevenueTarget: e.target.value })} />}</Field>
         </div>
         <p className="mt-6 mb-3 text-sm font-medium text-star">Net received by format, for sales outside the printing deal (% of the sale price)</p>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

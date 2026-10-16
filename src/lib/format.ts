@@ -26,6 +26,12 @@ export const num = (value: number) => intFmt.format(Math.round(value));
 export const pct = (value: number, digits = 0) =>
   `${(Number.isFinite(value) ? value * 100 : 0).toFixed(digits)}%`;
 
+/** 50% stays "50%", a third reads "33.3%". */
+export function sharePct(x: number) {
+  const whole = Math.abs(x * 100 - Math.round(x * 100)) < 0.05;
+  return pct(x, whole ? 0 : 1);
+}
+
 /** Local YYYY-MM-DD (not UTC, so "today" matches the owner's calendar). */
 export function isoDay(d: Date = new Date()): string {
   const y = d.getFullYear();

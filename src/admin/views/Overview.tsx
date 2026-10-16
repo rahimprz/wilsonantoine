@@ -1,70 +1,53 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, ArrowUpRight, BookOpen, PencilLine, CalendarClock, MousePointerClick, Plus, Receipt, Sparkles, Table2, Target, UserPlus, LineChart } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, ArrowUpRight, BookOpen, FileText, PencilLine, Plus } from "lucide-react";
 import { useStore } from "../../lib/store";
-import { engagement, groupBy, inRange, monthPace, pipeline, repStats, series, totals, delta, grainFor } from "../../lib/metrics";
-import { fmtDay, greeting, num, pct, relativeDays } from "../../lib/format";
-import { contentStore, dealStore, eventsStore, leadsStore, partnersStore, payoutsStore, printRunsStore, repsStore, salesStore, settingsStore, subscribersStore } from "../../data/stores";
-import { loadDemoData } from "../../data/demo";
-import { STAGE_LABEL } from "../../data/constants";
+import { fmtDay, fmtDayYear, greeting, num, sharePct } from "../../lib/format";
+import { contentStore, dealStore, partnersStore, printRunsStore, repsStore, salesStore, settingsStore } from "../../data/stores";
 import { resolveMedia } from "../../lib/media";
-import { distribution, ledger, printing, stock } from "../../lib/profit";
+import { distribution, ledger, outlook, perCopy, printing } from "../../lib/profit";
 import { primaryRetailer } from "../../site/buy";
 import { useAdmin } from "../context";
-import { BarList, Progress, TrendChart, VIZ } from "../charts";
-import { Kpi, RangePicker, rangeLabel, SaleEditor } from "../components";
-import { Badge, Button, Card, CardHeader, DemoBadge, EmptyState, IconButton, PageHeader, useFeedback } from "../ui";
+import { Kpi, SaleEditor } from "../components";
+import { Badge, Button, Card, DemoBadge, EmptyState, PageHeader } from "../ui";
+import { NumberedHeader, Rows } from "./Profit";
 
+/**
+ * The publisher's Book Sales & Profit Distribution Report, kept live: the same figures, cumulative
+ * to date, recalculated whenever a sale, the print run or the deal changes.
+ */
 export default function Overview() {
   const sales = useStore(salesStore);
-  const leads = useStore(leadsStore);
   const reps = useStore(repsStore);
-  const events = useStore(eventsStore);
-  const subscribers = useStore(subscribersStore);
   const settings = useStore(settingsStore);
   const deal = useStore(dealStore);
   const partners = useStore(partnersStore);
   const runs = useStore(printRunsStore);
-  const payouts = useStore(payoutsStore);
-  const { range, rangeKey, money } = useAdmin();
-  const { toast } = useFeedback();
+  const { money } = useAdmin();
+  const navigate = useNavigate();
   const [recording, setRecording] = useState(false);
-  const [tableView, setTableView] = useState(false);
 
-  const current = useMemo(() => sales.filter((s) => inRange(s.date, range.start, range.end)), [sales, range]);
-  const previous = useMemo(() => sales.filter((s) => inRange(s.date, range.prevStart, range.prevEnd)), [sales, range]);
-  const t = totals(current);
-  const l = ledger(current);
-  const lp = ledger(previous);
-  const printed = useMemo(() => printing(runs), [runs]);
-  const ownerShare = (list: typeof sales) => distribution(partners, deal, list, [], printed).lines.find((x) => x.partner.owner)?.earned ?? 0;
-  const myShare = ownerShare(current);
-  const myPrevShare = ownerShare(previous);
-  const toDate = distribution(partners, deal, sales, payouts, printed).lines.find((x) => x.partner.owner);
-  const inStock = runs.length ? stock(runs, sales).reduce((a, f) => a + f.remaining, 0) : null;
-  const buckets = useMemo(() => series(sales, range.start, range.end), [sales, range]);
-  const grain = grainFor(range.days);
-  const formats = groupBy(current, "format");
-  const channels = groupBy(current, "channel");
-  const leaderboard = repStats(reps, sales, leads, range.start, range.end);
-  const pipe = pipeline(leads);
-  const pace = monthPace(sales);
-  const eng = engagement(events, range.start, range.end);
-  const newSubs = subscribers.filter((s) => inRange(s.date.slice(0, 10), range.start, range.end)).length;
+  const p = useMemo(() => printing(runs), [runs]);
+  const l = ledger(sales);
+  const look = outlook(partners, deal, runs, sales);
+  const copy = perCopy(deal, p);
+  const dist = distribution(partners, deal, sales, [], p);
+  const mine = dist.lines.find((x) => x.partner.owner);
+  const since = deal.startDate || sales.reduce((min, s) => (!min || s.date < min ? s.date : min), "");
+  const needsSetup = look.invested <= 0 || runs.length === 0;
   const recent = [...sales].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt).slice(0, 6);
-  const repName = (id: string) => reps.find((r) => r.id === id)?.name ?? "—";
-
-  const spark = (key: "gross" | "net" | "profit" | "units") => buckets.map((b) => b[key]);
-  const empty = sales.length === 0;
+  const repName = (id: string) => reps.find((r) => r.id === id)?.name ?? "";
 
   return (
     <div>
       <PageHeader
         title={`${greeting()}, ${settings.ownerName || "there"}`}
-        subtitle={empty ? "Your sales dashboard is ready. Record a sale or explore with demo data to see it come alive." : `Here's how Postmortem Life Continuation is doing — ${rangeLabel(rangeKey)}.`}
+        subtitle={since ? `Book sales and profit to date — cumulative since ${fmtDayYear(since)}.` : "Book sales and profit to date."}
         actions={
           <>
-            <RangePicker />
+            <Button onClick={() => navigate("/admin/statements")}>
+              <FileText className="h-4 w-4" /> Statement
+            </Button>
             <Button variant="primary" onClick={() => setRecording(true)}>
               <Plus className="h-4 w-4" /> Record sale
             </Button>
@@ -74,275 +57,120 @@ export default function Overview() {
 
       <BookBanner
         stats={[
-          { label: "Copies sold, all time", value: num(ledger(sales).units) },
-          { label: "Net profit, all time", value: money(ledger(sales).profit) },
-          { label: "Your share, all time", value: money(toDate?.earned ?? 0), hint: toDate && toDate.balance > 0.005 ? `${money(toDate.balance)} still due` : undefined },
-          inStock != null ? { label: "Copies in stock", value: num(inStock), hint: inStock <= deal.lowStockAt ? "Low — time to reprint?" : undefined } : { label: "Newsletter readers", value: num(subscribers.length) },
+          { label: "Total investment", value: money(look.invested) },
+          { label: "Books printed", value: num(look.printed) },
+          { label: "Printing cost per book", value: money(copy.cost) },
+          { label: "Selling price per book", value: money(copy.price) },
         ]}
       />
 
-      {empty && (
-        <Card className="mb-6 overflow-hidden">
-          <div className="grid gap-px bg-white/[0.06] md:grid-cols-3">
-            {[
-              { icon: Receipt, title: "Record your first sale", text: "Amazon royalties, event signings, bulk orders — log them as they come in.", action: () => setRecording(true), label: "Record sale" },
-              { icon: UserPlus, title: "Add your sales reps", text: "Track who sells what, commissions owed, and monthly targets.", to: "/admin/reps", label: "Add reps" },
-              { icon: Sparkles, title: "Explore with demo data", text: "Fill the dashboard with clearly-labelled sample records. One click removes them.", action: () => { loadDemoData(); toast("Demo data loaded — clear it anytime from the banner"); }, label: "Load demo data" },
-            ].map((s) => (
-              <div key={s.title} className="bg-[#0e1430] p-6">
-                <s.icon className="h-6 w-6 text-gold" />
-                <p className="mt-4 font-semibold text-star">{s.title}</p>
-                <p className="mt-1 text-sm text-mist">{s.text}</p>
-                {s.to ? (
-                  <Link to={s.to} className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-gold hover:text-gold-light">
-                    {s.label} <ArrowRight className="h-4 w-4" />
-                  </Link>
-                ) : (
-                  <button onClick={s.action} className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-gold hover:text-gold-light">
-                    {s.label} <ArrowRight className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+      {needsSetup && (
+        <Card className="mb-6 flex flex-wrap items-center justify-between gap-3 p-5">
+          <p className="text-sm text-mist">
+            <span className="text-star">Finish setting up the deal</span> — each partner's investment and the print run — and every figure here fills in.
+          </p>
+          <Link to="/admin/profit" className="inline-flex items-center gap-1.5 text-sm font-medium text-gold hover:text-gold-light">
+            Set up the deal <ArrowRight className="h-4 w-4" />
+          </Link>
         </Card>
       )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Kpi label="Copies sold" value={num(l.units)} change={delta(l.units, lp.units)} spark={spark("units")} sparkColor={VIZ.gold} hint={l.givenAway ? `+ ${num(l.givenAway)} given away` : undefined} />
-        <Kpi label="Sales revenue" value={money(l.gross)} change={delta(l.gross, lp.gross)} spark={spark("gross")} sparkColor={VIZ.gold} hint={`${money(l.net)} net received`} />
-        <Kpi label="Net profit" value={money(l.profit)} change={delta(l.profit, lp.profit)} spark={spark("profit")} sparkColor={VIZ.blue} hint={`after ${money(l.vendor)} distributor share and ${money(l.cost)} printing`} />
-        <Kpi label="Your share of profit" value={money(myShare)} change={delta(myShare, myPrevShare)} hint={<Link to="/admin/profit" className="text-gold hover:text-gold-light">See the split →</Link>} />
+        <Kpi
+          label="Books sold"
+          value={num(l.units)}
+          hint={[look.printed ? `of ${num(look.printed)} printed` : "", l.givenAway ? `${num(l.givenAway)} given away` : ""].filter(Boolean).join(" · ") || undefined}
+        />
+        <Kpi label="Total sales revenue" value={money(l.gross)} hint={`${money(l.vendor)} distributor share · ${money(l.net)} received`} />
+        <Kpi label="Total net profit" value={money(l.profit)} hint={`after ${money(l.cost)} printing cost`} />
+        <Kpi
+          label="Your profit"
+          value={money(mine?.earned ?? 0)}
+          hint={
+            <>
+              {mine && partners.length > 1 && `${sharePct(mine.share)} share · `}
+              <Link to="/admin/profit" className="text-gold hover:text-gold-light">
+                See the split →
+              </Link>
+            </>
+          }
+        />
       </div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader
-            title="Revenue over time"
-            subtitle={`${grain === "day" ? "Daily" : grain === "week" ? "Weekly" : "Monthly"} · ${fmtDay(range.start)} – ${fmtDay(range.end)}`}
-            action={
-              <IconButton label={tableView ? "Show chart" : "Show as table"} onClick={() => setTableView((v) => !v)}>
-                {tableView ? <LineChart className="h-4 w-4" /> : <Table2 className="h-4 w-4" />}
-              </IconButton>
-            }
-          />
-          <div className="px-5 pt-4 pb-5 md:px-6">
-            {tableView ? (
-              <div className="max-h-[300px] overflow-auto" data-lenis-prevent>
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-[#0e1430] text-left text-xs text-haze">
-                    <tr>
-                      <th className="py-2 font-medium">Period</th>
-                      <th className="py-2 text-right font-medium">Copies</th>
-                      <th className="py-2 text-right font-medium">Revenue</th>
-                      <th className="py-2 text-right font-medium">Net profit</th>
-                    </tr>
-                  </thead>
-                  <tbody className="tabular-nums">
-                    {buckets.map((b) => (
-                      <tr key={b.key} className="border-t border-white/[0.05]">
-                        <td className="py-2 text-mist">{b.label}</td>
-                        <td className="py-2 text-right">{num(b.units)}</td>
-                        <td className="py-2 text-right">{money(b.gross)}</td>
-                        <td className="py-2 text-right">{money(b.profit)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <TrendChart
-                labels={buckets.map((b) => b.label)}
-                series={[
-                  { key: "gross", label: "Sales revenue", color: VIZ.gold, values: buckets.map((b) => b.gross), area: true },
-                  { key: "profit", label: "Net profit", color: VIZ.blue, values: buckets.map((b) => b.profit) },
-                ]}
-                format={(v) => money(v)}
-                formatAxis={(v) => money(v, true)}
-                extra={(i) => (
-                  <p className="mt-1.5 flex justify-between border-t border-white/10 pt-1.5 text-mist">
-                    Copies <span className="font-medium text-star tabular-nums">{num(buckets[i].units)}</span>
-                  </p>
-                )}
-              />
-            )}
-          </div>
-        </Card>
-
+      <div className="mt-4 grid gap-4 xl:grid-cols-2 [&>*]:min-w-0">
         <Card>
-          <CardHeader title="This month's goal" subtitle={`Day ${pace.day} of ${pace.daysInMonth}`} action={<Target className="h-5 w-5 text-gold" />} />
-          <div className="space-y-6 px-5 pt-5 pb-6 md:px-6">
-            <Goal label="Copies" value={pace.units} target={settings.monthlyUnitTarget} projected={pace.projectedUnits} format={num} />
-            <Goal label="Sales revenue" value={pace.gross} target={settings.monthlyRevenueTarget} projected={pace.projectedGross} format={(v) => money(v)} />
-            <Link to="/admin/settings" className="inline-flex items-center gap-1.5 text-sm text-mist hover:text-gold">
-              Adjust targets <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </Card>
-      </div>
-
-      <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Card>
-          <CardHeader title="Copies by format" subtitle="Which editions readers choose" />
-          <div className="px-5 pt-5 pb-6 md:px-6">
-            <BarList
-              items={formats
-                .slice()
-                .sort((a, b) => b.units - a.units)
-                .map((f) => ({ key: f.key, label: f.key, value: f.units, display: num(f.units), detail: `${money(f.gross)} gross · ${pct(f.units / Math.max(1, t.units))} of copies` }))}
-            />
-          </div>
-        </Card>
-        <Card>
-          <CardHeader title="Revenue by channel" subtitle="Where the money comes from" />
-          <div className="px-5 pt-5 pb-6 md:px-6">
-            <BarList
-              color={VIZ.blue}
-              items={channels.map((c) => ({ key: c.key, label: c.key, value: c.gross, display: money(c.gross), detail: `${num(c.units)} copies · ${money(c.net)} net` }))}
-            />
-          </div>
-        </Card>
-        <Card className="md:col-span-2 xl:col-span-1">
-          <CardHeader title="Website engagement" subtitle="From the book site's own tracking" action={<MousePointerClick className="h-5 w-5 text-gold" />} />
-          <div className="px-5 pt-5 pb-6 md:px-6">
-            <BarList
-              color={VIZ.blue}
-              empty="No visits recorded in this period yet."
-              items={[
-                { key: "v", label: "Visits", value: eng.visit, display: num(eng.visit) },
-                { key: "c", label: "Chapter previews opened", value: eng.chapter_open, display: num(eng.chapter_open) },
-                { key: "e", label: "Excerpt reads", value: eng.excerpt_open, display: num(eng.excerpt_open) },
-                { key: "b", label: "Clicks to buy", value: eng.buy_click, display: num(eng.buy_click) },
-                { key: "s", label: "Newsletter sign-ups", value: newSubs, display: num(newSubs) },
+          <NumberedHeader title="Revenue per book" subtitle="How each copy sold is divided" />
+          <div className="px-5 pt-2 pb-5 md:px-6">
+            <Rows
+              rows={[
+                { label: "Selling price", value: money(copy.price) },
+                { label: `Distribution vendor share (${deal.vendorShare}%)`, value: money(copy.vendor) },
+                { label: "Net revenue received", value: money(copy.net) },
+                { label: "Printing cost", value: money(copy.cost) },
+                { label: "Net profit per book", value: money(copy.profit), strong: true },
               ]}
             />
-            <p className="mt-5 flex items-center justify-between rounded-xl bg-white/[0.03] px-4 py-3 text-sm">
-              <span className="text-mist">Visit → buy click rate</span>
-              <span className="font-semibold text-star">{pct(eng.clickThrough, 1)}</span>
-            </p>
           </div>
-        </Card>
-      </div>
-
-      <div className="mt-4 grid gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader
-            title="Sales rep leaderboard"
-            subtitle={`Attributed sales, ${rangeLabel(rangeKey)}`}
-            action={
-              <Link to="/admin/reps" className="text-sm text-mist hover:text-gold">
-                All reps →
-              </Link>
-            }
-          />
-          {leaderboard.length === 0 ? (
-            <EmptyState icon={<UserPlus className="h-6 w-6" />} title="No sales reps yet" action={<Link to="/admin/reps" className="text-sm font-medium text-gold">Add a rep →</Link>}>
-              Add the people selling the book to track their numbers and commissions.
-            </EmptyState>
-          ) : (
-            <div className="overflow-x-auto px-2 pt-3 pb-4 md:px-3">
-              <table className="w-full min-w-[560px] text-sm">
-                <thead className="text-left text-xs text-haze">
-                  <tr>
-                    <th className="px-3 py-2 font-medium">Rep</th>
-                    <th className="px-3 py-2 text-right font-medium">Copies</th>
-                    <th className="px-3 py-2 text-right font-medium">Gross</th>
-                    <th className="px-3 py-2 text-right font-medium">Commission</th>
-                    <th className="w-40 px-3 py-2 font-medium">Month target</th>
-                  </tr>
-                </thead>
-                <tbody className="tabular-nums">
-                  {leaderboard.slice(0, 6).map((r, i) => (
-                    <tr key={r.rep.id} className="border-t border-white/[0.05]">
-                      <td className="px-3 py-3">
-                        <span className="flex items-center gap-3">
-                          <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-semibold ${i === 0 && r.gross > 0 ? "bg-gold text-void" : "bg-white/[0.07] text-mist"}`}>{i + 1}</span>
-                          <span>
-                            <span className="flex items-center gap-2 text-star">
-                              {r.rep.name} {r.rep.demo && <DemoBadge />}
-                            </span>
-                            <span className="text-xs text-haze">{r.rep.region}</span>
-                          </span>
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 text-right">{num(r.units)}</td>
-                      <td className="px-3 py-3 text-right">{money(r.gross)}</td>
-                      <td className="px-3 py-3 text-right text-gold-light">{money(r.commission)}</td>
-                      <td className="px-3 py-3">
-                        <Progress value={r.targetProgress} label={`${r.rep.name} monthly target`} />
-                        <span className="mt-1 block text-xs text-haze">
-                          {num(r.monthUnits)} / {num(r.rep.monthlyTarget)} copies
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </Card>
 
         <Card>
-          <CardHeader
-            title="Pipeline"
-            subtitle={`${num(pipe.openCount)} open · ${money(pipe.openValue)} potential`}
+          <NumberedHeader
+            title="Profit distribution"
+            subtitle="Net profit to date, by each partner's investment"
             action={
-              <Link to="/admin/pipeline" className="text-sm text-mist hover:text-gold">
-                Open →
+              <Link to="/admin/profit" className="shrink-0 text-sm text-mist hover:text-gold">
+                Split &amp; payments →
               </Link>
             }
           />
-          <div className="px-5 pt-4 pb-5 md:px-6">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-xl bg-white/[0.03] p-3">
-                <p className="text-xs text-haze">Weighted forecast</p>
-                <p className="mt-1 font-semibold text-star">{money(pipe.weighted)}</p>
-              </div>
-              <div className="rounded-xl bg-white/[0.03] p-3">
-                <p className="text-xs text-haze">Win rate</p>
-                <p className="mt-1 font-semibold text-star">{pipe.winRate == null ? "—" : pct(pipe.winRate)}</p>
-              </div>
-            </div>
-            <p className="mt-5 mb-2 flex items-center gap-2 text-xs font-medium tracking-wide text-mist uppercase">
-              <CalendarClock className="h-4 w-4 text-gold" /> Follow-ups due
-            </p>
-            {pipe.due.length === 0 ? (
-              <p className="py-4 text-sm text-haze">Nothing due in the next 7 days.</p>
+          <div className="px-5 pt-2 pb-5 md:px-6">
+            {dist.lines.length === 0 ? (
+              <p className="py-6 text-center text-sm text-haze">Add the partners on Profit &amp; split to see the distribution.</p>
             ) : (
-              <ul className="divide-y divide-white/[0.05]">
-                {pipe.due.slice(0, 5).map((l) => {
-                  const overdue = l.followUp < new Date().toISOString().slice(0, 10);
-                  return (
-                    <li key={l.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                      <span className="min-w-0">
-                        <span className="block truncate text-star">{l.org}</span>
-                        <span className="text-xs text-haze">{STAGE_LABEL[l.stage]} · {repName(l.repId)}</span>
+              <Rows
+                rows={[
+                  ...dist.lines.map((line) => ({
+                    label: (
+                      <span className="flex flex-wrap items-center gap-x-2">
+                        {line.partner.name}
+                        {line.partner.owner && <Badge tone="gold">You</Badge>}
+                        <span className="text-haze">{money(line.investment)} invested</span>
                       </span>
-                      <Badge tone={overdue ? "bad" : "warn"}>{overdue ? `Overdue · ${relativeDays(l.followUp)}` : relativeDays(l.followUp)}</Badge>
-                    </li>
-                  );
-                })}
-              </ul>
+                    ),
+                    value: money(line.earned),
+                  })),
+                  { label: "Total net profit", value: money(l.profit), strong: true },
+                ]}
+              />
             )}
           </div>
         </Card>
       </div>
 
       <Card className="mt-4">
-        <CardHeader
-          title="Recent sales"
+        <NumberedHeader
+          title="Sales entries"
+          subtitle="The figures above are added up from these"
           action={
-            <Link to="/admin/sales" className="text-sm text-mist hover:text-gold">
+            <Link to="/admin/sales" className="shrink-0 text-sm text-mist hover:text-gold">
               All sales →
             </Link>
           }
         />
         {recent.length === 0 ? (
-          <EmptyState icon={<BookOpen className="h-6 w-6" />} title="No sales recorded yet" action={<Button variant="primary" onClick={() => setRecording(true)}><Plus className="h-4 w-4" /> Record sale</Button>}>
-            Every sale you log here feeds the charts, goals and rep commissions above.
+          <EmptyState
+            icon={<BookOpen className="h-6 w-6" />}
+            title="No sales recorded yet"
+            action={
+              <Button variant="primary" onClick={() => setRecording(true)}>
+                <Plus className="h-4 w-4" /> Record sale
+              </Button>
+            }
+          >
+            Add each publisher statement (or any other sale) and the figures above update by themselves.
           </EmptyState>
         ) : (
-          <div className="overflow-x-auto px-2 pt-3 pb-4 md:px-3">
+          <div className="overflow-x-auto px-2 pt-2 pb-4 md:px-3">
             <table className="w-full min-w-[620px] text-sm">
               <tbody className="tabular-nums">
                 {recent.map((s) => (
@@ -350,11 +178,11 @@ export default function Overview() {
                     <td className="px-3 py-3 text-mist">{fmtDay(s.date)}</td>
                     <td className="px-3 py-3 text-star">
                       <span className="flex items-center gap-2">
-                        {s.quantity} × {s.format} {s.demo && <DemoBadge />}
+                        {num(s.quantity)} × {s.format} {s.demo && <DemoBadge />}
                       </span>
                     </td>
                     <td className="px-3 py-3 text-mist">{s.channel}</td>
-                    <td className="px-3 py-3 text-mist">{s.customer || (s.repId ? repName(s.repId) : "")}</td>
+                    <td className="px-3 py-3 text-mist">{s.customer || repName(s.repId)}</td>
                     <td className="px-3 py-3 text-right font-medium text-star">{money(s.quantity * s.unitPrice)}</td>
                   </tr>
                 ))}
@@ -369,30 +197,7 @@ export default function Overview() {
   );
 }
 
-function Goal({ label, value, target, projected, format }: { label: string; value: number; target: number; projected: number; format: (v: number) => string }) {
-  const progress = target > 0 ? value / target : 0;
-  const onTrack = target > 0 && projected >= target;
-  return (
-    <div>
-      <div className="mb-2 flex items-baseline justify-between gap-3">
-        <span className="text-sm text-mist">{label}</span>
-        <span className="text-sm tabular-nums">
-          <span className="font-semibold text-star">{format(value)}</span>
-          <span className="text-haze"> / {target > 0 ? format(target) : "no target"}</span>
-        </span>
-      </div>
-      <Progress value={progress} label={`${label} toward monthly target`} />
-      {target > 0 && (
-        <p className="mt-2 flex items-center justify-between text-xs">
-          <span className="text-haze">On pace for {format(projected)}</span>
-          <Badge tone={onTrack ? "good" : "warn"}>{onTrack ? "On track" : `${pct(Math.min(progress, 9.99))} reached`}</Badge>
-        </p>
-      )}
-    </div>
-  );
-}
-
-/** The book itself, front and centre: cover, where it sells, and its lifetime numbers. */
+/** The book itself, front and centre: cover, where it sells, and the deal it was printed under. */
 function BookBanner({ stats }: { stats: { label: string; value: string; hint?: string }[] }) {
   const content = useStore(contentStore);
   const retailer = primaryRetailer(content.buy.retailers);

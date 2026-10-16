@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Check, CircleDollarSign, FileText, HandCoins, Package, Pencil, Plus, Settings2, Trash2, Users } from "lucide-react";
 import { useStore } from "../../lib/store";
-import { fmtDayYear, num, pct } from "../../lib/format";
+import { fmtDayYear, num, pct, sharePct } from "../../lib/format";
 import { distribution, ledger, outlook, perCopy, printing, salesIn, stock } from "../../lib/profit";
 import { dealStore, partnersStore, payoutsStore, printRunsStore, salesStore } from "../../data/stores";
 import type { Payout } from "../../data/types";
@@ -477,12 +477,6 @@ export default function Profit() {
       <PayoutEditor open={payout.open} payout={payout.record} partnerId={payout.partnerId} onClose={() => setPayout({ open: false })} />
     </div>
   );
-}
-
-/** 50% stays "50%", a third reads "33.3%". */
-function sharePct(x: number) {
-  const whole = Math.abs(x * 100 - Math.round(x * 100)) < 0.05;
-  return pct(x, whole ? 0 : 1);
 }
 
 /** Opens the publisher's statement figures that ship sealed with the dashboard passcode. */

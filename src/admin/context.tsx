@@ -20,7 +20,8 @@ export function useAdmin() {
   return ctx;
 }
 
-const RANGE_KEY = "wa.admin.range";
+// v2: everyone starts again on "All time" now that sales arrive as cumulative publisher statements
+const RANGE_KEY = "wa.admin.range.v2";
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const sales = useStore(salesStore);

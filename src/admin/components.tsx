@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { CalendarDays, TrendingDown, TrendingUp } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { RANGE_OPTIONS, type RangeKey } from "../lib/metrics";
-import { isoDay, pct } from "../lib/format";
+import { isoDay } from "../lib/format";
 import { uid } from "../lib/id";
 import { useStore } from "../lib/store";
 import { CHANNELS, FORMATS, GIVEAWAY_CHANNEL } from "../data/constants";
@@ -9,7 +9,6 @@ import { printing, shares, vendorShareFor } from "../lib/profit";
 import { dealStore, partnersStore, printRunsStore, repsStore, salesStore, settingsStore } from "../data/stores";
 import type { Sale } from "../data/types";
 import { useAdmin } from "./context";
-import { Sparkline } from "./charts";
 import { Button, Card, DemoBadge, Drawer, Field, Input, Select, Textarea, useFeedback } from "./ui";
 
 export function RangePicker() {
@@ -33,44 +32,12 @@ export function rangeLabel(key: RangeKey) {
   return RANGE_OPTIONS.find((o) => o.key === key)?.label.toLowerCase() ?? "";
 }
 
-export function Kpi({
-  label,
-  value,
-  change,
-  spark,
-  sparkColor,
-  hint,
-}: {
-  label: string;
-  value: ReactNode;
-  change?: number | null;
-  spark?: number[];
-  sparkColor?: string;
-  hint?: ReactNode;
-}) {
-  const up = change != null && change >= 0;
+export function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: ReactNode }) {
   return (
     <Card className="flex flex-col p-5">
       <p className="text-[0.8rem] font-medium tracking-wide text-mist">{label}</p>
-      <p className="mt-2 text-[1.85rem] leading-tight font-semibold tracking-tight text-white">{value}</p>
-      <div className="mt-2 flex min-h-5 items-center gap-2 text-xs">
-        {change != null ? (
-          <span className={`inline-flex items-center gap-1 font-medium ${up ? "text-[#7ee07e]" : "text-[#ff9a9a]"}`}>
-            {up ? <TrendingUp className="h-3.5 w-3.5" /> : <TrendingDown className="h-3.5 w-3.5" />}
-            {up ? "+" : ""}
-            {pct(change, Math.abs(change) < 0.1 ? 1 : 0)}
-          </span>
-        ) : (
-          <span className="text-haze">No earlier data</span>
-        )}
-        <span className="text-haze">{change != null ? "vs previous period" : ""}</span>
-      </div>
-      {hint && <p className="mt-1 text-xs text-haze">{hint}</p>}
-      {spark && spark.length > 1 && (
-        <div className="mt-auto pt-3">
-          <Sparkline values={spark} color={sparkColor} />
-        </div>
-      )}
+      <p className="mt-2 text-[1.45rem] leading-tight font-semibold tracking-tight text-white tabular-nums sm:text-[1.85rem]">{value}</p>
+      {hint && <p className="mt-2 text-xs leading-relaxed text-haze">{hint}</p>}
     </Card>
   );
 }
