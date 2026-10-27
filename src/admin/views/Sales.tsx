@@ -109,8 +109,10 @@ export default function Sales() {
       const rawDate = cell("date");
       const d = /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : isNaN(Date.parse(rawDate)) ? "" : isoDay(new Date(rawDate));
       const quantity = Number(cell("qty"));
-      const unitPrice = Number(cell("price").replace(/[^0-9.-]/g, "") || 0);
-      const fmt = FORMATS.find((f) => f.toLowerCase() === cell("format").toLowerCase()) ?? (cell("format") || FORMATS[0]);
+      // a blank format is the printed edition, and a blank price its cover price, as on a publisher statement
+      const fmt = FORMATS.find((f) => f.toLowerCase() === cell("format").toLowerCase()) ?? (cell("format") || p.main || FORMATS[0]);
+      const priceRaw = cell("price").replace(/[^0-9.-]/g, "");
+      const unitPrice = priceRaw ? Number(priceRaw) : p.isPrinted(fmt) ? deal.listPrice : 0;
       const netRaw = cell("net").replace(/[^0-9.-]/g, "");
       if (!d || !Number.isFinite(quantity) || quantity <= 0) {
         skipped.push(`Row ${i + 2}: ${!d ? "unreadable date" : "quantity missing"}`);
@@ -314,7 +316,7 @@ export default function Sales() {
 
       <p className="mt-4 flex flex-wrap items-center gap-2 text-xs text-haze">
         <FileDown className="h-4 w-4" />
-        CSV import reads columns named date, channel, format, quantity, unit_price, net, printing_cost, rep, customer, notes — the same layout Export produces. Missing net and printing cost are filled in from the deal.
+        CSV import reads columns named date, channel, format, quantity, unit_price, net, printing_cost, rep, customer, notes — the same layout Export produces. Missing price, format, net and printing cost are filled in from the deal and print runs.
         <button
           className="text-gold hover:underline"
           onClick={() => download("sales-template.csv", toCSV([{ date: isoDay(), channel: "Distributor", format: "Paperback", quantity: 10, unitPrice: 25, gross: 250, vendor: 100, net: 150, cost: 100, profit: 50, rep: "", customer: "", notes: "" }], COLUMNS))}
